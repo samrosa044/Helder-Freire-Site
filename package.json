@@ -8,6 +8,6 @@
     "db:init": "wrangler d1 execute helder-imoveis --file=schema.sql"
   },
   "devDependencies": {
-    "wrangler": "^3.0.0"
+    "wrangler": "^4.78.0"
   }
 }
