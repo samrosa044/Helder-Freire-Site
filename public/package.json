@@ -1,0 +1,13 @@
+{
+  "name": "helder-imoveis",
+  "version": "4.0.0",
+  "description": "Site Helder Freire Imóveis — Cloudflare Pages + Workers + D1",
+  "scripts": {
+    "dev": "wrangler pages dev public --d1=DB",
+    "deploy": "wrangler pages deploy public",
+    "db:init": "wrangler d1 execute helder-imoveis --file=schema.sql"
+  },
+  "devDependencies": {
+    "wrangler": "^4.78.0"
+  }
+}
