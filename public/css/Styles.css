@@ -676,3 +676,9 @@ footer{background:#06122e;border-top:1px solid rgba(201,168,76,.1);padding:50px 
     .ifgrid,.ifgrid.col3{grid-template-columns:1fr}
     .iform-body,.iform-header{padding:20px}
   }
+  /* ── Cloudflare Security Badge ── */
+  .cf-security-badge{display:flex;align-items:center;gap:6px;font-size:11px;color:rgba(255,255,255,.45);margin:10px 0 4px;font-family:'Outfit',sans-serif}
+  .cf-security-badge svg{flex-shrink:0}
+  .iform-next:disabled,.modal-submit:disabled{opacity:.5!important;cursor:not-allowed!important;pointer-events:none}
+  .iform-next:not(:disabled){opacity:1;cursor:pointer;pointer-events:auto}
+  .modal-submit:not(:disabled){opacity:1;cursor:pointer;pointer-events:auto}

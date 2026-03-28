@@ -4,6 +4,38 @@
 //  localStorage → API REST segura
 // ═══════════════════════════════════════════════════
 
+// ─── Turnstile tokens ────────────────────────────────────────────
+let tsCadastroToken = null;
+let tsClienteToken  = null;
+let tsProprietarioToken = null;
+
+function onTsCadastro(token) {
+  tsCadastroToken = token;
+  const btn = document.getElementById('btn-cadastro-submit');
+  btn.disabled = false;
+  btn.style.opacity = '1';
+  btn.style.cursor = 'pointer';
+  btn.textContent = 'Enviar Cadastro para Análise';
+}
+
+function onTsCliente(token) {
+  tsClienteToken = token;
+  const btn = document.getElementById('c-submit-btn');
+  btn.disabled = false;
+  btn.style.opacity = '1';
+  btn.style.cursor = 'pointer';
+  btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6.5" stroke="var(--navy)"/><path d="M3 7.5L5.5 10.5L11 4" stroke="var(--navy)" stroke-width="1.6" stroke-linecap="round"/></svg> Enviar Solicitação`;
+}
+
+function onTsProprietario(token) {
+  tsProprietarioToken = token;
+  const btn = document.getElementById('p-submit-btn');
+  btn.disabled = false;
+  btn.style.opacity = '1';
+  btn.style.cursor = 'pointer';
+  btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6.5" stroke="var(--navy)"/><path d="M3 7.5L5.5 10.5L11 4" stroke="var(--navy)" stroke-width="1.6" stroke-linecap="round"/></svg> Enviar para Helder Freire`;
+}
+
 // ─── API Helper ──────────────────────────────────────────────────
 const API = {
   token: () => sessionStorage.getItem('adm_token'),
@@ -136,8 +168,9 @@ async function submitCadastro() {
   const wa   = document.getElementById('c_wa').value.trim();
 
   if (!nome || !wa) { alert('Preencha nome e WhatsApp'); return; }
+  if (!tsCadastroToken) { alert('Confirme que você não é um robô'); return; }
 
-  const btn = document.querySelector('#cadastroModal .modal-submit');
+  const btn = document.getElementById('btn-cadastro-submit');
   btn.textContent = '⏳ Enviando...';
   btn.disabled = true;
 
