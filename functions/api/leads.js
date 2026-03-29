@@ -70,7 +70,7 @@ export async function onRequestGet({ request, env }) {
   try {
     const { results } = await ( env.DB || env.helder_freire_imoveis ).prepare(
       `SELECT * FROM leads ORDER BY criado_em DESC`
-    ).all();\
+    ).all();
 
     return json(results);
   } catch (e) {
