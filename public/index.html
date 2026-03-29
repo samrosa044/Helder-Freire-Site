@@ -738,18 +738,16 @@
             <select id="c-contato"><option>WhatsApp (preferência)</option><option>Ligação telefônica</option><option>E-mail</option><option>Qualquer um</option></select></div>
           <div class="ifg"><label>Quando pretende comprar/alugar?</label>
             <select id="c-prazo"><option>Imediatamente (já decidi)</option><option>Em até 1 mês</option><option>Em até 3 meses</option><option>Em 6 meses ou mais</option><option>Ainda estou pesquisando</option></select></div>
+          <div class="cf-security-badge" style="margin-bottom:8px;margin-top:20px">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M12 2L4 6v6c0 5.25 3.5 10.15 8 11.35C16.5 22.15 20 17.25 20 12V6L12 2Z" fill="#22c55e" opacity=".2" stroke="#22c55e" stroke-width="1.5"/><path d="M9 12l2 2 4-4" stroke="#22c55e" stroke-width="1.5" stroke-linecap="round"/></svg>
+            Dados protegidos pela Cloudflare — confirme que não é um robô
+          </div>
+          <div class="cf-turnstile" id="ts-cliente" data-sitekey="0x4AAAAAACxUqF1s-5o5oIzJ" data-callback="onTsCliente" data-theme="dark" style="margin-bottom:14px"></div>
           <div class="iform-nav">
             <button class="iform-back" onclick="nextStep('c',3,2)">← Voltar</button>
-            <div style="flex:1">
-              <div class="cf-security-badge" style="margin-bottom:8px">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M12 2L4 6v6c0 5.25 3.5 10.15 8 11.35C16.5 22.15 20 17.25 20 12V6L12 2Z" fill="#22c55e" opacity=".2" stroke="#22c55e" stroke-width="1.5"/><path d="M9 12l2 2 4-4" stroke="#22c55e" stroke-width="1.5" stroke-linecap="round"/></svg>
-                Dados protegidos pela Cloudflare
-              </div>
-              <div class="cf-turnstile" id="ts-cliente" data-sitekey="0x4AAAAAACxUqF1s-5o5oIzJ" data-callback="onTsCliente" data-size="compact"></div>
-            </div>
             <button class="iform-next" id="c-submit-btn" onclick="submitForm('cliente')" disabled style="opacity:.5;cursor:not-allowed">
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6.5" stroke="var(--navy)"/><path d="M3 7.5L5.5 10.5L11 4" stroke="var(--navy)" stroke-width="1.6" stroke-linecap="round"/></svg>
-              Verificar para Enviar
+              Enviar Solicitação
             </button>
           </div>
         </div>
@@ -908,18 +906,16 @@
             <textarea id="p-desc" placeholder="Descreva o que torna seu imóvel especial: reformado, localização, área verde, benfeitorias..."></textarea></div>
           <div class="ifg"><label>Valor do Condomínio ou IPTU (se aplicável)</label>
             <input type="text" id="p-condo" placeholder="Ex: Condomínio R$ 450/mês, IPTU R$ 80/mês"></div>
+          <div class="cf-security-badge" style="margin-bottom:8px;margin-top:20px">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M12 2L4 6v6c0 5.25 3.5 10.15 8 11.35C16.5 22.15 20 17.25 20 12V6L12 2Z" fill="#22c55e" opacity=".2" stroke="#22c55e" stroke-width="1.5"/><path d="M9 12l2 2 4-4" stroke="#22c55e" stroke-width="1.5" stroke-linecap="round"/></svg>
+            Dados protegidos pela Cloudflare — confirme que não é um robô
+          </div>
+          <div class="cf-turnstile" id="ts-proprietario" data-sitekey="0x4AAAAAACxUqF1s-5o5oIzJ" data-callback="onTsProprietario" data-theme="dark" style="margin-bottom:14px"></div>
           <div class="iform-nav">
             <button class="iform-back" onclick="nextStep('p',4,3)">← Voltar</button>
-            <div style="flex:1">
-              <div class="cf-security-badge" style="margin-bottom:8px">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M12 2L4 6v6c0 5.25 3.5 10.15 8 11.35C16.5 22.15 20 17.25 20 12V6L12 2Z" fill="#22c55e" opacity=".2" stroke="#22c55e" stroke-width="1.5"/><path d="M9 12l2 2 4-4" stroke="#22c55e" stroke-width="1.5" stroke-linecap="round"/></svg>
-                Dados protegidos pela Cloudflare
-              </div>
-              <div class="cf-turnstile" id="ts-proprietario" data-sitekey="0x4AAAAAACxUqF1s-5o5oIzJ" data-callback="onTsProprietario" data-size="compact"></div>
-            </div>
             <button class="iform-next" id="p-submit-btn" onclick="submitForm('proprietario')" disabled style="opacity:.5;cursor:not-allowed">
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6.5" stroke="var(--navy)"/><path d="M3 7.5L5.5 10.5L11 4" stroke="var(--navy)" stroke-width="1.6" stroke-linecap="round"/></svg>
-              Verificar para Enviar
+              Enviar para Helder Freire
             </button>
           </div>
         </div>

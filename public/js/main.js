@@ -12,27 +12,27 @@ let tsProprietarioToken = null;
 function onTsCadastro(token) {
   tsCadastroToken = token;
   const btn = document.getElementById('btn-cadastro-submit');
+  if (!btn) return;
   btn.disabled = false;
-  btn.style.opacity = '1';
-  btn.style.cursor = 'pointer';
+  btn.removeAttribute('style');
   btn.textContent = 'Enviar Cadastro para Análise';
 }
 
 function onTsCliente(token) {
   tsClienteToken = token;
   const btn = document.getElementById('c-submit-btn');
+  if (!btn) return;
   btn.disabled = false;
-  btn.style.opacity = '1';
-  btn.style.cursor = 'pointer';
+  btn.removeAttribute('style');
   btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6.5" stroke="var(--navy)"/><path d="M3 7.5L5.5 10.5L11 4" stroke="var(--navy)" stroke-width="1.6" stroke-linecap="round"/></svg> Enviar Solicitação`;
 }
 
 function onTsProprietario(token) {
   tsProprietarioToken = token;
   const btn = document.getElementById('p-submit-btn');
+  if (!btn) return;
   btn.disabled = false;
-  btn.style.opacity = '1';
-  btn.style.cursor = 'pointer';
+  btn.removeAttribute('style');
   btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6.5" stroke="var(--navy)"/><path d="M3 7.5L5.5 10.5L11 4" stroke="var(--navy)" stroke-width="1.6" stroke-linecap="round"/></svg> Enviar para Helder Freire`;
 }
 
@@ -628,6 +628,21 @@ async function submitForm(tipo) {
   const isCliente = tipo === 'cliente';
   const prefix    = isCliente ? 'c' : 'p';
   const submitBtn = document.getElementById(prefix + '-submit-btn');
+
+  // Fallback: pega token direto do widget caso callback não tenha disparado
+  if (isCliente && !tsClienteToken) {
+    tsClienteToken = window.turnstile?.getResponse(document.getElementById('ts-cliente')) || null;
+  }
+  if (!isCliente && !tsProprietarioToken) {
+    tsProprietarioToken = window.turnstile?.getResponse(document.getElementById('ts-proprietario')) || null;
+  }
+
+  const tokenOk = isCliente ? tsClienteToken : tsProprietarioToken;
+  if (!tokenOk) {
+    alert('Por favor, complete a verificação de segurança antes de enviar.');
+    return;
+  }
+
   submitBtn.classList.add('status-sending');
   submitBtn.textContent = '⏳ Enviando...';
 
