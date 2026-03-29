@@ -6,7 +6,7 @@ pages_build_output_dir = "public"
 # Após criar o banco com: wrangler d1 create helder-imoveis
 # Substitua o database_id pelo ID gerado
 [[d1_databases]]
-binding = "helder_freire_imoveis"
+binding = "DB"
 database_name = "helder-freire-imoveis"
 database_id = "aaf4b7fd-dc95-49a8-bd1e-1f2ffe29c9d8"
 

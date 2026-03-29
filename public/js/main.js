@@ -627,13 +627,8 @@ async function submitForm(tipo) {
   const prefix    = isCliente ? 'c' : 'p';
   const submitBtn = document.getElementById(prefix + '-submit-btn');
 
-  // Pega o token do Turnstile — do callback ou direto do widget
-  const widgetId  = isCliente ? 'ts-cliente' : 'ts-proprietario';
-  const widgetEl  = document.getElementById(widgetId);
-  const token     = (isCliente ? tsClienteToken : tsProprietarioToken)
-                    || window.turnstile?.getResponse(widgetEl)
-                    || null;
-
+  // Única condição: token do Turnstile definido pelo callback
+  const token = isCliente ? tsClienteToken : tsProprietarioToken;
   if (!token) {
     alert('Por favor, complete a verificação "Não sou um robô" antes de enviar.');
     return;
