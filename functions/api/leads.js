@@ -15,7 +15,7 @@ export async function onRequestPost({ request, env }) {
       return json({ erro: 'Nome e WhatsApp são obrigatórios' }, 400);
     }
 
-    await env.DB.prepare(`
+    await ( env.DB || env.helder_freire_imoveis ).prepare(`
       INSERT INTO leads
         (nome, whatsapp, email, tipo_imovel, finalidade,
          valor_maximo, quartos_minimo, bairro, observacoes,
@@ -29,7 +29,7 @@ export async function onRequestPost({ request, env }) {
       d.como_contatar || '', d.prazo || ''
     ).run();
 
-    await env.DB.prepare(
+    await ( env.DB || env.helder_freire_imoveis ).prepare(
       `INSERT INTO auditoria (tipo, mensagem) VALUES ('info', ?)`
     ).bind(`Novo lead: ${d.nome} buscando ${d.tipo_imovel || 'imóvel'}`).run();
 
@@ -44,7 +44,7 @@ export async function onRequestGet({ request, env }) {
   if (!await autenticado(request, env.JWT_SECRET)) return naoAutorizado();
 
   try {
-    const { results } = await env.DB.prepare(
+    const { results } = await ( env.DB || env.helder_freire_imoveis ).prepare(
       `SELECT * FROM leads ORDER BY criado_em DESC`
     ).all();
 

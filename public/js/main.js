@@ -22,17 +22,33 @@ function onTsCliente(token) {
   tsClienteToken = token;
   const btn = document.getElementById('c-submit-btn');
   if (!btn) return;
-  btn.classList.remove('btn-locked');
-  btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6.5" stroke="var(--navy)"/><path d="M3 7.5L5.5 10.5L11 4" stroke="var(--navy)" stroke-width="1.6" stroke-linecap="round"/></svg> Enviar Solicitação`;
+  btn.style.opacity = '1';
+  btn.style.pointerEvents = 'auto';
+  btn.style.cursor = 'pointer';
+  btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6.5" stroke="var(--navy)"/><path d="M3 7.5L5.5 10.5L11 4" stroke="var(--navy)" stroke-width="1.6" stroke-linecap="round"/></svg> Enviar Solicitação';
 }
 
 function onTsProprietario(token) {
   tsProprietarioToken = token;
   const btn = document.getElementById('p-submit-btn');
   if (!btn) return;
-  btn.classList.remove('btn-locked');
-  btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6.5" stroke="var(--navy)"/><path d="M3 7.5L5.5 10.5L11 4" stroke="var(--navy)" stroke-width="1.6" stroke-linecap="round"/></svg> Enviar para Helder Freire`;
+  btn.style.opacity = '1';
+  btn.style.pointerEvents = 'auto';
+  btn.style.cursor = 'pointer';
+  btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6.5" stroke="var(--navy)"/><path d="M3 7.5L5.5 10.5L11 4" stroke="var(--navy)" stroke-width="1.6" stroke-linecap="round"/></svg> Enviar para Helder Freire';
 }
+
+// Polling: checa o Turnstile a cada 500ms como fallback
+setInterval(() => {
+  if (!tsClienteToken) {
+    const r = window.turnstile?.getResponse('ts-cliente') || window.turnstile?.getResponse();
+    if (r && r.length > 10) onTsCliente(r);
+  }
+  if (!tsProprietarioToken) {
+    const r = window.turnstile?.getResponse('ts-proprietario');
+    if (r && r.length > 10) onTsProprietario(r);
+  }
+}, 500);
 
 // ─── API Helper ──────────────────────────────────────────────────
 const API = {
