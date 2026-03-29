@@ -17,7 +17,7 @@ export async function onRequestGet({ request, env }) {
   try {
     if (id) {
       // Busca imóvel específico
-      const imovel = await env.DB.prepare(
+      const imovel = await ( env.DB || env.helder_freire_imoveis ).prepare(
         `SELECT * FROM imoveis WHERE id = ? AND status = 'ativo'`
       ).bind(id).first();
       return imovel
@@ -31,8 +31,8 @@ export async function onRequestGet({ request, env }) {
       : `SELECT * FROM imoveis WHERE status = 'ativo' ORDER BY id DESC`;
 
     const { results } = tipo && tipo !== 'todos'
-      ? await env.DB.prepare(query).bind(tipo).all()
-      : await env.DB.prepare(query).all();
+      ? await ( env.DB || env.helder_freire_imoveis ).prepare(query).bind(tipo).all()
+      : await ( env.DB || env.helder_freire_imoveis ).prepare(query).all();
 
     return json(results);
   } catch (e) {
@@ -51,7 +51,7 @@ export async function onRequestPost({ request, env }) {
       return json({ erro: 'Título, endereço e valor são obrigatórios' }, 400);
     }
 
-    const result = await env.DB.prepare(`
+    const result = await ( env.DB || env.helder_freire_imoveis ).prepare(`
       INSERT INTO imoveis (tipo, titulo, endereco, cidade, valor, area, quartos, vagas, modal, descricao, fotos, status, destaque)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'ativo', ?)
     `).bind(
@@ -62,7 +62,7 @@ export async function onRequestPost({ request, env }) {
       d.fotos || '', d.destaque || 'Não'
     ).run();
 
-    await env.DB.prepare(
+    await ( env.DB || env.helder_freire_imoveis ).prepare(
       `INSERT INTO auditoria (tipo, mensagem) VALUES ('add', ?)`
     ).bind(`Imóvel adicionado: "${d.titulo}" (${d.tipo})`).run();
 
@@ -80,7 +80,7 @@ export async function onRequestPut({ request, env }) {
     const d = await request.json();
     if (!d.id) return json({ erro: 'ID obrigatório' }, 400);
 
-    await env.DB.prepare(`
+    await ( env.DB || env.helder_freire_imoveis ).prepare(`
       UPDATE imoveis SET
         tipo = ?, titulo = ?, endereco = ?, cidade = ?,
         valor = ?, area = ?, quartos = ?, vagas = ?,
@@ -94,7 +94,7 @@ export async function onRequestPut({ request, env }) {
       d.destaque, d.id
     ).run();
 
-    await env.DB.prepare(
+    await ( env.DB || env.helder_freire_imoveis ).prepare(
       `INSERT INTO auditoria (tipo, mensagem) VALUES ('edit', ?)`
     ).bind(`Imóvel #${d.id} atualizado: "${d.titulo}"`).run();
 
@@ -114,13 +114,13 @@ export async function onRequestDelete({ request, env }) {
     if (!id) return json({ erro: 'ID obrigatório' }, 400);
 
     // Busca título para o log antes de deletar
-    const imovel = await env.DB.prepare(
+    const imovel = await ( env.DB || env.helder_freire_imoveis ).prepare(
       `SELECT titulo FROM imoveis WHERE id = ?`
     ).bind(id).first();
 
-    await env.DB.prepare(`DELETE FROM imoveis WHERE id = ?`).bind(id).run();
+    await ( env.DB || env.helder_freire_imoveis ).prepare(`DELETE FROM imoveis WHERE id = ?`).bind(id).run();
 
-    await env.DB.prepare(
+    await ( env.DB || env.helder_freire_imoveis ).prepare(
       `INSERT INTO auditoria (tipo, mensagem) VALUES ('delete', ?)`
     ).bind(`Imóvel #${id} excluído: "${imovel?.titulo || ''}"`).run();
 
