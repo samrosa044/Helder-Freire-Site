@@ -627,28 +627,23 @@ async function submitForm(tipo) {
   const prefix    = isCliente ? 'c' : 'p';
   const submitBtn = document.getElementById(prefix + '-submit-btn');
 
-  // Fallback: pega token direto do widget caso callback não tenha disparado
-  if (isCliente && !tsClienteToken) {
-    tsClienteToken = window.turnstile?.getResponse(document.getElementById('ts-cliente')) || null;
-    if (tsClienteToken) onTsCliente(tsClienteToken);
-  }
-  if (!isCliente && !tsProprietarioToken) {
-    tsProprietarioToken = window.turnstile?.getResponse(document.getElementById('ts-proprietario')) || null;
-    if (tsProprietarioToken) onTsProprietario(tsProprietarioToken);
-  }
+  // Pega o token do Turnstile — do callback ou direto do widget
+  const widgetId  = isCliente ? 'ts-cliente' : 'ts-proprietario';
+  const widgetEl  = document.getElementById(widgetId);
+  const token     = (isCliente ? tsClienteToken : tsProprietarioToken)
+                    || window.turnstile?.getResponse(widgetEl)
+                    || null;
 
-  // Se ainda está bloqueado, avisa
-  if (submitBtn.classList.contains('btn-locked')) {
-    alert('Por favor, complete a verificação de segurança antes de enviar.');
+  if (!token) {
+    alert('Por favor, complete a verificação "Não sou um robô" antes de enviar.');
     return;
   }
 
-  submitBtn.classList.add('btn-locked');
+  submitBtn.disabled    = true;
   submitBtn.textContent = '⏳ Enviando...';
 
   try {
     if (isCliente) {
-      // Lead — cliente buscando imóvel
       await API.post('/leads', {
         nome:           document.getElementById('c-nome').value,
         whatsapp:       document.getElementById('c-wa').value,
@@ -663,20 +658,19 @@ async function submitForm(tipo) {
         prazo:          document.getElementById('c-prazo').value,
       });
     } else {
-      // Cadastro — proprietário enviando imóvel
       const tipoIm = document.getElementById('p-tipo').value;
       const dadosExtras = {};
 
       if (['casa','apartamento','aluguel'].includes(tipoIm)) {
-        dadosExtras.aceita_fgts         = document.getElementById('p-fgts')?.value;
+        dadosExtras.aceita_fgts          = document.getElementById('p-fgts')?.value;
         dadosExtras.aceita_financiamento = document.getElementById('p-fin')?.value;
       } else if (tipoIm === 'fazenda') {
-        dadosExtras.hectares        = document.getElementById('p-ha')?.value;
-        dadosExtras.alqueires       = document.getElementById('p-alq')?.value;
+        dadosExtras.hectares         = document.getElementById('p-ha')?.value;
+        dadosExtras.alqueires        = document.getElementById('p-alq')?.value;
         dadosExtras.distancia_passos = document.getElementById('p-dist')?.value;
       } else if (tipoIm === 'terreno') {
-        dadosExtras.frente      = document.getElementById('p-frente')?.value;
-        dadosExtras.topografia  = document.getElementById('p-topo')?.value;
+        dadosExtras.frente       = document.getElementById('p-frente')?.value;
+        dadosExtras.topografia   = document.getElementById('p-topo')?.value;
         dadosExtras.documentacao = document.getElementById('p-doc')?.value;
       }
 
@@ -705,7 +699,7 @@ async function submitForm(tipo) {
     document.getElementById(prefix + '-success').classList.add('show');
   } catch (e) {
     alert('Erro ao enviar: ' + e.message);
-    submitBtn.classList.remove('status-sending');
+    submitBtn.disabled    = false;
     submitBtn.textContent = 'Enviar';
   }
 }
