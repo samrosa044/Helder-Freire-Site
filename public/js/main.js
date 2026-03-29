@@ -4,11 +4,18 @@
 //  localStorage → API REST segura
 // ═══════════════════════════════════════════════════
 
-// ─── Turnstile tokens ────────────────────────────────────────────
-let tsCadastroToken = null;
-let tsClienteToken  = null;
+// ─── Turnstile — Renderização Explícita ──────────────────────────
+// Usando ?render=explicit conforme recomendação oficial do Cloudflare
+// para widgets em elementos ocultos / formulários multi-step.
+// Referência: developers.cloudflare.com/turnstile/get-started/client-side-rendering/
+const TS_SITEKEY  = '0x4AAAAAACxUqF1s-5o5oIzJ';
+const _tsWidgetId = {};   // guarda o widget ID retornado por turnstile.render()
+
+let tsCadastroToken     = null;
+let tsClienteToken      = null;
 let tsProprietarioToken = null;
 
+// ── Callbacks ─────────────────────────────────────────────────────
 function onTsCadastro(token) {
   tsCadastroToken = token;
   const btn = document.getElementById('btn-cadastro-submit');
@@ -22,9 +29,9 @@ function onTsCliente(token) {
   tsClienteToken = token;
   const btn = document.getElementById('c-submit-btn');
   if (!btn) return;
-  btn.style.opacity = '1';
+  btn.style.opacity       = '1';
   btn.style.pointerEvents = 'auto';
-  btn.style.cursor = 'pointer';
+  btn.style.cursor        = 'pointer';
   btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6.5" stroke="var(--navy)"/><path d="M3 7.5L5.5 10.5L11 4" stroke="var(--navy)" stroke-width="1.6" stroke-linecap="round"/></svg> Enviar Solicitação';
 }
 
@@ -32,33 +39,47 @@ function onTsProprietario(token) {
   tsProprietarioToken = token;
   const btn = document.getElementById('p-submit-btn');
   if (!btn) return;
-  btn.style.opacity = '1';
+  btn.style.opacity       = '1';
   btn.style.pointerEvents = 'auto';
-  btn.style.cursor = 'pointer';
+  btn.style.cursor        = 'pointer';
   btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6.5" stroke="var(--navy)"/><path d="M3 7.5L5.5 10.5L11 4" stroke="var(--navy)" stroke-width="1.6" stroke-linecap="round"/></svg> Enviar para Helder Freire';
 }
 
-// ── Reseta botão + widget ao entrar no step de verificação ────────
-function _resetTurnstileBtn(prefix) {
-  const isC   = prefix === 'c';
-  const btnId = isC ? 'c-submit-btn'  : 'p-submit-btn';
-  const tsId  = isC ? 'ts-cliente'    : 'ts-proprietario';
+// ── Renderização explícita ────────────────────────────────────────
+// Deve ser chamada SOMENTE quando o container já está visível (display:block).
+// Remove o widget anterior se existir e cria um novo, garantindo que o
+// callback seja registrado corretamente.
+function _tsRender(containerId, callbackFn, resetBtnId) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
 
-  if (isC) tsClienteToken = null; else tsProprietarioToken = null;
-
-  const btn = document.getElementById(btnId);
-  if (btn) {
-    btn.style.opacity       = '0.4';
-    btn.style.pointerEvents = 'none';
-    btn.style.cursor        = 'not-allowed';
+  // Reseta e desativa o botão correspondente
+  if (resetBtnId) {
+    const btn = document.getElementById(resetBtnId);
+    if (btn) {
+      btn.style.opacity       = '0.4';
+      btn.style.pointerEvents = 'none';
+      btn.style.cursor        = 'not-allowed';
+    }
   }
 
-  // Aguarda display:block entrar em vigor, depois reseta pelo elemento DOM
-  setTimeout(() => {
-    const el = document.getElementById(tsId);
-    if (!el || !window.turnstile) return;
-    try { window.turnstile.reset(el); } catch (_) {}
-  }, 200);
+  // Limpa token anterior
+  if (containerId === 'ts-cadastro')     tsCadastroToken     = null;
+  if (containerId === 'ts-cliente')      tsClienteToken      = null;
+  if (containerId === 'ts-proprietario') tsProprietarioToken = null;
+
+  // Remove widget anterior para evitar duplicidade
+  if (_tsWidgetId[containerId] !== undefined) {
+    try { window.turnstile.remove(_tsWidgetId[containerId]); } catch (_) {}
+    delete _tsWidgetId[containerId];
+  }
+
+  // Renderiza e guarda o widget ID retornado
+  _tsWidgetId[containerId] = window.turnstile.render(container, {
+    sitekey:  TS_SITEKEY,
+    callback: callbackFn,
+    theme:    'dark',
+  });
 }
 
 // ─── API Helper ──────────────────────────────────────────────────
@@ -180,6 +201,8 @@ function openCadastroModal() {
   document.getElementById('cadastroModal').classList.add('open');
   document.getElementById('cadastroBody').style.display = 'block';
   document.getElementById('cadastroSuccess').classList.remove('show');
+  // Renderiza o widget Turnstile agora que o modal está visível
+  _tsRender('ts-cadastro', onTsCadastro, 'btn-cadastro-submit');
   document.body.style.overflow = 'hidden';
 }
 
@@ -632,9 +655,11 @@ function nextStep(prefix, from, to) {
     if (i + 1 === to) s.classList.add('active');
   });
 
-  // Quando entra no step de verificação, reseta o Turnstile (agora visível)
-  if (prefix === 'c' && to === 3) _resetTurnstileBtn('c');
-  if (prefix === 'p' && to === 4) _resetTurnstileBtn('p');
+  // Renderiza o Turnstile agora que o step está visível (display:block via CSS)
+  // Usando renderização explícita conforme recomendação do Cloudflare para
+  // widgets que ficam em containers ocultos durante o carregamento da página.
+  if (prefix === 'c' && to === 3) _tsRender('ts-cliente',      onTsCliente,      'c-submit-btn');
+  if (prefix === 'p' && to === 4) _tsRender('ts-proprietario', onTsProprietario, 'p-submit-btn');
 }
 
 function selTipo(btn, inputId, valor) {
