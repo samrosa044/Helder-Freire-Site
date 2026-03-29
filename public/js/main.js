@@ -22,8 +22,7 @@ function onTsCliente(token) {
   tsClienteToken = token;
   const btn = document.getElementById('c-submit-btn');
   if (!btn) return;
-  btn.disabled = false;
-  btn.removeAttribute('style');
+  btn.classList.remove('btn-locked');
   btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6.5" stroke="var(--navy)"/><path d="M3 7.5L5.5 10.5L11 4" stroke="var(--navy)" stroke-width="1.6" stroke-linecap="round"/></svg> Enviar Solicitação`;
 }
 
@@ -31,8 +30,7 @@ function onTsProprietario(token) {
   tsProprietarioToken = token;
   const btn = document.getElementById('p-submit-btn');
   if (!btn) return;
-  btn.disabled = false;
-  btn.removeAttribute('style');
+  btn.classList.remove('btn-locked');
   btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6.5" stroke="var(--navy)"/><path d="M3 7.5L5.5 10.5L11 4" stroke="var(--navy)" stroke-width="1.6" stroke-linecap="round"/></svg> Enviar para Helder Freire`;
 }
 
@@ -632,18 +630,20 @@ async function submitForm(tipo) {
   // Fallback: pega token direto do widget caso callback não tenha disparado
   if (isCliente && !tsClienteToken) {
     tsClienteToken = window.turnstile?.getResponse(document.getElementById('ts-cliente')) || null;
+    if (tsClienteToken) onTsCliente(tsClienteToken);
   }
   if (!isCliente && !tsProprietarioToken) {
     tsProprietarioToken = window.turnstile?.getResponse(document.getElementById('ts-proprietario')) || null;
+    if (tsProprietarioToken) onTsProprietario(tsProprietarioToken);
   }
 
-  const tokenOk = isCliente ? tsClienteToken : tsProprietarioToken;
-  if (!tokenOk) {
+  // Se ainda está bloqueado, avisa
+  if (submitBtn.classList.contains('btn-locked')) {
     alert('Por favor, complete a verificação de segurança antes de enviar.');
     return;
   }
 
-  submitBtn.classList.add('status-sending');
+  submitBtn.classList.add('btn-locked');
   submitBtn.textContent = '⏳ Enviando...';
 
   try {

@@ -691,4 +691,6 @@ footer{background:#06122e;border-top:1px solid rgba(201,168,76,.1);padding:50px 
   .cf-security-badge svg{flex-shrink:0}
   .iform-next:disabled,.modal-submit:disabled{opacity:.5!important;cursor:not-allowed!important;pointer-events:none}
   .iform-next:not(:disabled){opacity:1;cursor:pointer;pointer-events:auto}
+  .iform-next.btn-locked{opacity:.5!important;cursor:not-allowed!important;pointer-events:none!important}
+  .iform-next:not(.btn-locked){opacity:1;cursor:pointer;pointer-events:auto}
   .modal-submit:not(:disabled){opacity:1;cursor:pointer;pointer-events:auto}
