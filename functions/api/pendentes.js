@@ -8,6 +8,23 @@ function getDB(env) {
   return env.DB || env.helder_freire_imoveis || env.HELDER_FREIRE_IMOVEIS;
 }
 
+// ── Valida token Cloudflare Turnstile ─────────────
+async function verificarTurnstile(token, secret, ip) {
+  if (!secret) return true; // se não configurou a secret, pula validação
+  if (!token)  return false;
+  const form = new FormData();
+  form.append('secret',   secret);
+  form.append('response', token);
+  if (ip) form.append('remoteip', ip);
+  try {
+    const r    = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', { method: 'POST', body: form });
+    const data = await r.json();
+    return data.success === true;
+  } catch (_) {
+    return true; // em caso de falha na rede, não bloqueia o usuário
+  }
+}
+
 // ── GET — Lista pendentes (admin) ─────────────────
 export async function onRequestGet({ request, env }) {
   if (!await autenticado(request, env.JWT_SECRET)) return naoAutorizado();
@@ -97,10 +114,17 @@ export async function onRequestPost({ request, env }) {
       return json({ erro: 'Nome e WhatsApp são obrigatórios' }, 400);
     }
 
+    // ── Validação Turnstile ──────────────────────
+    const ip      = request.headers.get('CF-Connecting-IP') || '';
+    const tsValido = await verificarTurnstile(d.cf_token, env.TURNSTILE_SECRET, ip);
+    if (!tsValido) {
+      return json({ erro: 'Verificação de segurança inválida. Recarregue a página e tente novamente.' }, 403);
+    }
+
     const extras = JSON.stringify(d.dados_extras || {});
 
     await DB.prepare(
-      'INSERT INTO pendentes (formulario, tipo_imovel, modalidade, nome, whatsapp, email, proprietario, endereco, cidade, valor, area, quartos, suites, vagas, fotos, descricao, dados_extras) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+      'INSERT INTO pendentes (formulario, tipo_imovel, modalidade, nome, whatsapp, email, proprietario, endereco, cidade, valor, area, quartos, suites, vagas, fotos, descricao, condo_iptu, dados_extras) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
     ).bind(
       d.formulario || 'proprietario',
       d.tipo_imovel || '', d.modalidade || 'Venda',
@@ -109,7 +133,7 @@ export async function onRequestPost({ request, env }) {
       d.cidade || 'Passos', d.valor || '',
       d.area || '', d.quartos || '', d.suites || '',
       d.vagas || '', d.fotos || '',
-      d.descricao || '', extras
+      d.descricao || '', d.condo_iptu || '', extras
     ).run();
 
     await DB.prepare("INSERT INTO auditoria (tipo, mensagem) VALUES ('info', ?)")

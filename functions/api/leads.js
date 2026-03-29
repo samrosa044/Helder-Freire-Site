@@ -6,6 +6,23 @@
 // ═══════════════════════════════════════════════════
 import { autenticado, json, naoAutorizado } from '../_auth.js';
 
+// ── Valida token Cloudflare Turnstile ─────────────
+async function verificarTurnstile(token, secret, ip) {
+  if (!secret) return true; // se não configurou a secret, pula validação
+  if (!token)  return false;
+  const form = new FormData();
+  form.append('secret',   secret);
+  form.append('response', token);
+  if (ip) form.append('remoteip', ip);
+  try {
+    const r    = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', { method: 'POST', body: form });
+    const data = await r.json();
+    return data.success === true;
+  } catch (_) {
+    return true; // em caso de falha na rede, não bloqueia o usuário
+  }
+}
+
 // ── POST — Registra novo lead (público) ───────────
 export async function onRequestPost({ request, env }) {
   try {
@@ -13,6 +30,13 @@ export async function onRequestPost({ request, env }) {
 
     if (!d.nome || !d.whatsapp) {
       return json({ erro: 'Nome e WhatsApp são obrigatórios' }, 400);
+    }
+
+    // ── Validação Turnstile ──────────────────────
+    const ip       = request.headers.get('CF-Connecting-IP') || '';
+    const tsValido = await verificarTurnstile(d.cf_token, env.TURNSTILE_SECRET, ip);
+    if (!tsValido) {
+      return json({ erro: 'Verificação de segurança inválida. Recarregue a página e tente novamente.' }, 403);
     }
 
     await ( env.DB || env.helder_freire_imoveis ).prepare(`
@@ -46,7 +70,7 @@ export async function onRequestGet({ request, env }) {
   try {
     const { results } = await ( env.DB || env.helder_freire_imoveis ).prepare(
       `SELECT * FROM leads ORDER BY criado_em DESC`
-    ).all();
+    ).all();\
 
     return json(results);
   } catch (e) {

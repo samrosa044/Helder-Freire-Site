@@ -591,6 +591,34 @@ function resetForm(tipo) {
   if (succ) succ.classList.remove('show');
 }
 
+function _resetTurnstileBtn(prefix) {
+  const isC = prefix === 'c';
+  const btnId = isC ? 'c-submit-btn' : 'p-submit-btn';
+  const tsId  = isC ? 'ts-cliente'   : 'ts-proprietario';
+
+  // Limpa o token salvo
+  if (isC) tsClienteToken = null; else tsProprietarioToken = null;
+
+  // Garante botão desativado
+  const btn = document.getElementById(btnId);
+  if (btn) {
+    btn.style.opacity       = '0.4';
+    btn.style.pointerEvents = 'none';
+    btn.style.cursor        = 'not-allowed';
+  }
+
+  // Reseta o widget Turnstile DEPOIS que o step ficou visível
+  setTimeout(() => {
+    const container = document.getElementById(tsId);
+    if (!container) return;
+    try {
+      if (window.turnstile) {
+        window.turnstile.reset(container);
+      }
+    } catch (_) { /* ignora se o widget ainda não existir */ }
+  }, 150);
+}
+
 function nextStep(prefix, from, to) {
   if (prefix === 'c' && from === 1) {
     const nome = document.getElementById('c-nome').value.trim();
@@ -620,6 +648,10 @@ function nextStep(prefix, from, to) {
     if (i + 1 < to)  s.classList.add('done');
     if (i + 1 === to) s.classList.add('active');
   });
+
+  // Quando entra no passo de verificação, reseta o Turnstile para ele renderizar visível
+  if (prefix === 'c' && to === 3) _resetTurnstileBtn('c');
+  if (prefix === 'p' && to === 4) _resetTurnstileBtn('p');
 }
 
 function selTipo(btn, inputId, valor) {
@@ -702,7 +734,9 @@ async function submitForm(tipo) {
         suites:       document.getElementById('p-suites')?.value  || '',
         vagas:        document.getElementById('p-vagas')?.value   || '',
         area:         document.getElementById('p-area')?.value    || document.getElementById('p-tarea')?.value || '',
+        condo_iptu:   document.getElementById('p-condo')?.value   || '',
         dados_extras: dadosExtras,
+        cf_token:     token,
       });
     }
 
