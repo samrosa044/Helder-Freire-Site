@@ -541,14 +541,22 @@
 
       <!-- TAB: PENDENTES (AUDITORIA) -->
       <div class="adm-tab" id="tab-pendentes">
-        <div style="margin-bottom:16px;font-size:13px;color:var(--textl)">Imóveis cadastrados pelo formulário público aguardando aprovação ou rejeição.</div>
-        <div class="adm-filter-bar">
-          <input class="adm-search" type="text" placeholder="Buscar por nome, tipo, proprietário..." oninput="renderPendentes(this.value)">
-          <select class="adm-select" onchange="renderPendentes()"><option value="">Todos os tipos</option><option>casa</option><option>apartamento</option><option>fazenda</option><option>terreno</option><option>comercial</option><option>aluguel</option></select>
+        <div style="margin-bottom:16px;font-size:13px;color:var(--textl)">Cadastros recebidos pelo formulário público. Aprove para publicar o imóvel ou rejeite com um motivo.</div>
+
+        <!-- Abas de status -->
+        <div class="pend-status-tabs" id="pendStatusTabs">
+          <button class="pend-stab active" data-status="pendente" onclick="setPendStatus('pendente',this)">⏳ Pendentes <span class="pend-stab-count" id="cnt-pendente"></span></button>
+          <button class="pend-stab" data-status="aprovado" onclick="setPendStatus('aprovado',this)">✅ Aprovados <span class="pend-stab-count" id="cnt-aprovado"></span></button>
+          <button class="pend-stab" data-status="rejeitado" onclick="setPendStatus('rejeitado',this)">❌ Rejeitados <span class="pend-stab-count" id="cnt-rejeitado"></span></button>
+        </div>
+
+        <div class="adm-filter-bar" style="margin-top:12px">
+          <input class="adm-search" type="text" id="pend-search" placeholder="Buscar por nome, tipo, proprietário..." oninput="renderPendentes()">
+          <select class="adm-select" id="pend-tipo" onchange="renderPendentes()"><option value="">Todos os tipos</option><option>casa</option><option>apartamento</option><option>fazenda</option><option>terreno</option><option>comercial</option><option>aluguel</option></select>
         </div>
         <div class="adm-table-wrap">
           <table class="adm-table">
-            <thead><tr><th>Tipo</th><th>Proprietário</th><th>WhatsApp</th><th>Endereço/Local</th><th>Valor</th><th>Data</th><th>Ações</th></tr></thead>
+            <thead><tr><th>Tipo</th><th>Proprietário</th><th>WhatsApp</th><th>Endereço/Local</th><th>Valor</th><th>Data</th><th>Status / Ações</th></tr></thead>
             <tbody id="pendentes-tbody"></tbody>
           </table>
         </div>

@@ -282,35 +282,85 @@ async function updateKPIs() {
 }
 
 // ─── Pendentes ────────────────────────────────────────────────────
-async function renderPendentes(busca = '') {
-  const tb = document.getElementById('pendentes-tbody');
+let currentPendStatus = 'pendente';
+
+function setPendStatus(status, btn) {
+  currentPendStatus = status;
+  document.querySelectorAll('.pend-stab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderPendentes();
+}
+
+async function renderPendentes() {
+  const tb    = document.getElementById('pendentes-tbody');
+  const busca = (document.getElementById('pend-search')?.value || '').toLowerCase();
+  const tipo  = document.getElementById('pend-tipo')?.value || '';
+  const status = currentPendStatus;
+
   tb.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:20px">⏳ Carregando...</td></tr>';
 
   try {
-    let lista = await API.get('/pendentes?status=pendente', true);
+    let lista = await API.get('/pendentes?status=' + status, true);
+
     if (busca) lista = lista.filter(p =>
-      (p.nome || '').toLowerCase().includes(busca.toLowerCase()) ||
-      (p.tipo_imovel || '').toLowerCase().includes(busca.toLowerCase())
+      (p.nome       || '').toLowerCase().includes(busca) ||
+      (p.tipo_imovel|| '').toLowerCase().includes(busca) ||
+      (p.endereco   || '').toLowerCase().includes(busca)
     );
+    if (tipo) lista = lista.filter(p => p.tipo_imovel === tipo);
+
+    // Atualiza contadores nas abas
+    ['pendente','aprovado','rejeitado'].forEach(async s => {
+      try {
+        const all = await API.get('/pendentes?status=' + s, true);
+        const el  = document.getElementById('cnt-' + s);
+        if (el) el.textContent = all.length ? `(${all.length})` : '';
+      } catch {}
+    });
+
+    const emptyMsg = {
+      pendente:  'Nenhum cadastro pendente no momento 🎉',
+      aprovado:  'Nenhum cadastro aprovado ainda.',
+      rejeitado: 'Nenhum cadastro rejeitado.',
+    };
 
     if (!lista.length) {
-      tb.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--textl)">Nenhum cadastro pendente 🎉</td></tr>';
+      tb.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--textl)">${emptyMsg[status] || 'Nenhum resultado.'}</td></tr>`;
       return;
     }
 
-    tb.innerHTML = lista.map(p => `
-      <tr>
-        <td>${TYPE_ICONS[p.tipo_imovel] || '🏠'} ${TYPE_LABELS[p.tipo_imovel] || p.tipo_imovel}</td>
-        <td><strong>${p.nome}</strong></td>
-        <td><a href="https://wa.me/55${(p.whatsapp || '').replace(/\D/g,'')}" target="_blank" style="color:var(--green)">${p.whatsapp}</a></td>
-        <td>${p.endereco || p.cidade || '-'}</td>
-        <td>${p.valor ? 'R$ ' + p.valor : '-'}</td>
-        <td style="white-space:nowrap">${new Date(p.criado_em).toLocaleDateString('pt-BR')}</td>
-        <td style="white-space:nowrap">
+    tb.innerHTML = lista.map(p => {
+      const tipoLabel = `${TYPE_ICONS[p.tipo_imovel] || '🏠'} ${TYPE_LABELS[p.tipo_imovel] || p.tipo_imovel}`;
+      const wa        = `<a href="https://wa.me/55${(p.whatsapp||'').replace(/\D/g,'')}" target="_blank" style="color:var(--green)">${p.whatsapp}</a>`;
+      const data      = new Date(p.criado_em).toLocaleDateString('pt-BR');
+      const valor     = p.valor ? 'R$ ' + p.valor : '-';
+      const local     = p.endereco || p.cidade || '-';
+
+      let acoes = '';
+      if (status === 'pendente') {
+        acoes = `
           <button class="act-btn act-approve" onclick="aprovar(${p.id})">✓ Aprovar</button>
-          <button class="act-btn act-reject"  onclick="openReject(${p.id})">✗ Rejeitar</button>
-        </td>
-      </tr>`).join('');
+          <button class="act-btn act-reject"  onclick="openReject(${p.id})">✗ Rejeitar</button>`;
+      } else if (status === 'aprovado') {
+        acoes = `<span style="color:var(--green);font-size:12px;font-weight:600">✅ Aprovado</span>
+          <br><button class="act-btn act-reject" style="margin-top:4px;font-size:10px" onclick="openReject(${p.id})">Rejeitar</button>`;
+      } else if (status === 'rejeitado') {
+        const motivo = p.motivo_rejeicao ? `<br><span style="font-size:10px;color:var(--textl)">Motivo: ${p.motivo_rejeicao}</span>` : '';
+        acoes = `<span style="color:var(--red);font-size:12px;font-weight:600">❌ Rejeitado</span>${motivo}
+          <br><button class="act-btn act-approve" style="margin-top:4px;font-size:10px" onclick="aprovar(${p.id})">Aprovar</button>`;
+      }
+
+      return `
+        <tr>
+          <td>${tipoLabel}</td>
+          <td><strong>${p.nome}</strong>${p.formulario === 'cliente' ? '<br><span style="font-size:10px;color:var(--textl)">Cliente</span>' : ''}</td>
+          <td>${wa}</td>
+          <td>${local}</td>
+          <td>${valor}</td>
+          <td style="white-space:nowrap">${data}</td>
+          <td style="white-space:nowrap">${acoes}</td>
+        </tr>`;
+    }).join('');
   } catch (e) {
     tb.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--red)">Erro ao carregar. Tente novamente.</td></tr>';
   }
@@ -333,6 +383,7 @@ function openReject(id) {
 }
 function closeRejectModal() {
   document.getElementById('rejectModal').classList.remove('open');
+  document.getElementById('rejectReason').value = '';
   rejectId = null;
 }
 

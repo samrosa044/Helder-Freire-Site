@@ -493,6 +493,16 @@ footer{background:#06122e;border-top:1px solid rgba(201,168,76,.1);padding:50px 
 .act-delete{background:#fee2e2;color:#991b1b}
 .act-delete:hover{background:#fecaca}
 .act-view{background:#dbeafe;color:#1e40af}
+/* ─── Abas de status pendentes ─── */
+.pend-status-tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:4px}
+.pend-stab{
+  padding:7px 18px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;
+  font-family:'Outfit',sans-serif;transition:all .2s;border:1.5px solid var(--g200);
+  background:var(--g100);color:var(--textl);
+}
+.pend-stab:hover{background:var(--g200);color:var(--text)}
+.pend-stab.active{background:var(--gold);color:#111;border-color:var(--gold)}
+.pend-stab-count{font-weight:400;margin-left:4px;opacity:.8}
 .act-view:hover{background:#bfdbfe}
 
 /* admin forms */
