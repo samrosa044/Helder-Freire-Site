@@ -4,60 +4,61 @@
 //  localStorage → API REST segura
 // ═══════════════════════════════════════════════════
 
-// ─── Turnstile tokens e widget IDs ───────────────────────────────
-let tsCadastroToken     = null;
-let tsClienteToken      = null;
+// ─── Turnstile tokens ────────────────────────────────────────────
+let tsCadastroToken = null;
+let tsClienteToken  = null;
 let tsProprietarioToken = null;
 
-const TURNSTILE_SITEKEY = '0x4AAAAAACxUqF1s-5o5oIzJ';
-
-// ── Callbacks chamados pelo Turnstile ─────────────────────────────
 function onTsCadastro(token) {
   tsCadastroToken = token;
   const btn = document.getElementById('btn-cadastro-submit');
   if (!btn) return;
   btn.disabled = false;
   btn.removeAttribute('style');
-  btn.textContent = 'Enviar Cadastro para Analise';
+  btn.textContent = 'Enviar Cadastro para Análise';
 }
 
 function onTsCliente(token) {
   tsClienteToken = token;
   const btn = document.getElementById('c-submit-btn');
   if (!btn) return;
-  btn.style.opacity       = '1';
+  btn.style.opacity = '1';
   btn.style.pointerEvents = 'auto';
-  btn.style.cursor        = 'pointer';
-  btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6.5" stroke="var(--navy)"/><path d="M3 7.5L5.5 10.5L11 4" stroke="var(--navy)" stroke-width="1.6" stroke-linecap="round"/></svg> Enviar Solicitacao';
+  btn.style.cursor = 'pointer';
+  btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6.5" stroke="var(--navy)"/><path d="M3 7.5L5.5 10.5L11 4" stroke="var(--navy)" stroke-width="1.6" stroke-linecap="round"/></svg> Enviar Solicitação';
 }
 
 function onTsProprietario(token) {
   tsProprietarioToken = token;
   const btn = document.getElementById('p-submit-btn');
   if (!btn) return;
-  btn.style.opacity       = '1';
+  btn.style.opacity = '1';
   btn.style.pointerEvents = 'auto';
-  btn.style.cursor        = 'pointer';
+  btn.style.cursor = 'pointer';
   btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6.5" stroke="var(--navy)"/><path d="M3 7.5L5.5 10.5L11 4" stroke="var(--navy)" stroke-width="1.6" stroke-linecap="round"/></svg> Enviar para Helder Freire';
 }
 
-// ── Renderiza widget explicitamente (resolve o problema de hidden) ─
-// O widget auto-renderizado dentro de display:none nao registra
-// o callback. Esta funcao destroi e recria o widget enquanto visivel.
-function renderTurnstile(containerId, callbackFn) {
-  const container = document.getElementById(containerId);
-  if (!container) return;
-  if (!window.turnstile) {
-    // Turnstile ainda nao carregou; aguarda e tenta de novo
-    setTimeout(() => renderTurnstile(containerId, callbackFn), 300);
-    return;
+// ── Reseta botão + widget ao entrar no step de verificação ────────
+function _resetTurnstileBtn(prefix) {
+  const isC   = prefix === 'c';
+  const btnId = isC ? 'c-submit-btn'  : 'p-submit-btn';
+  const tsId  = isC ? 'ts-cliente'    : 'ts-proprietario';
+
+  if (isC) tsClienteToken = null; else tsProprietarioToken = null;
+
+  const btn = document.getElementById(btnId);
+  if (btn) {
+    btn.style.opacity       = '0.4';
+    btn.style.pointerEvents = 'none';
+    btn.style.cursor        = 'not-allowed';
   }
-  container.innerHTML = ''; // remove widget anterior
-  window.turnstile.render(container, {
-    sitekey:  TURNSTILE_SITEKEY,
-    callback: callbackFn,
-    theme:    'dark',
-  });
+
+  // Aguarda display:block entrar em vigor, depois reseta pelo elemento DOM
+  setTimeout(() => {
+    const el = document.getElementById(tsId);
+    if (!el || !window.turnstile) return;
+    try { window.turnstile.reset(el); } catch (_) {}
+  }, 200);
 }
 
 // ─── API Helper ──────────────────────────────────────────────────
@@ -601,27 +602,6 @@ function resetForm(tipo) {
   if (succ) succ.classList.remove('show');
 }
 
-function _resetTurnstileBtn(prefix) {
-  const isC   = prefix === 'c';
-  const btnId = isC ? 'c-submit-btn'    : 'p-submit-btn';
-  const tsId  = isC ? 'ts-cliente'      : 'ts-proprietario';
-  const cbFn  = isC ? onTsCliente       : onTsProprietario;
-
-  // Limpa o token salvo
-  if (isC) tsClienteToken = null; else tsProprietarioToken = null;
-
-  // Garante botao desativado
-  const btn = document.getElementById(btnId);
-  if (btn) {
-    btn.style.opacity       = '0.4';
-    btn.style.pointerEvents = 'none';
-    btn.style.cursor        = 'not-allowed';
-  }
-
-  // Aguarda o step ficar visivel (display:block via CSS) antes de renderizar
-  setTimeout(() => renderTurnstile(tsId, cbFn), 200);
-}
-
 function nextStep(prefix, from, to) {
   if (prefix === 'c' && from === 1) {
     const nome = document.getElementById('c-nome').value.trim();
@@ -652,7 +632,7 @@ function nextStep(prefix, from, to) {
     if (i + 1 === to) s.classList.add('active');
   });
 
-  // Quando entra no passo de verificação, reseta o Turnstile para ele renderizar visível
+  // Quando entra no step de verificação, reseta o Turnstile (agora visível)
   if (prefix === 'c' && to === 3) _resetTurnstileBtn('c');
   if (prefix === 'p' && to === 4) _resetTurnstileBtn('p');
 }
