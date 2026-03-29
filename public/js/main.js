@@ -4,51 +4,61 @@
 //  localStorage → API REST segura
 // ═══════════════════════════════════════════════════
 
-// ─── Turnstile tokens ────────────────────────────────────────────
-let tsCadastroToken = null;
-let tsClienteToken  = null;
+// ─── Turnstile tokens e widget IDs ───────────────────────────────
+let tsCadastroToken     = null;
+let tsClienteToken      = null;
 let tsProprietarioToken = null;
 
+const TURNSTILE_SITEKEY = '0x4AAAAAACxUqF1s-5o5oIzJ';
+
+// ── Callbacks chamados pelo Turnstile ─────────────────────────────
 function onTsCadastro(token) {
   tsCadastroToken = token;
   const btn = document.getElementById('btn-cadastro-submit');
   if (!btn) return;
   btn.disabled = false;
   btn.removeAttribute('style');
-  btn.textContent = 'Enviar Cadastro para Análise';
+  btn.textContent = 'Enviar Cadastro para Analise';
 }
 
 function onTsCliente(token) {
   tsClienteToken = token;
   const btn = document.getElementById('c-submit-btn');
   if (!btn) return;
-  btn.style.opacity = '1';
+  btn.style.opacity       = '1';
   btn.style.pointerEvents = 'auto';
-  btn.style.cursor = 'pointer';
-  btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6.5" stroke="var(--navy)"/><path d="M3 7.5L5.5 10.5L11 4" stroke="var(--navy)" stroke-width="1.6" stroke-linecap="round"/></svg> Enviar Solicitação';
+  btn.style.cursor        = 'pointer';
+  btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6.5" stroke="var(--navy)"/><path d="M3 7.5L5.5 10.5L11 4" stroke="var(--navy)" stroke-width="1.6" stroke-linecap="round"/></svg> Enviar Solicitacao';
 }
 
 function onTsProprietario(token) {
   tsProprietarioToken = token;
   const btn = document.getElementById('p-submit-btn');
   if (!btn) return;
-  btn.style.opacity = '1';
+  btn.style.opacity       = '1';
   btn.style.pointerEvents = 'auto';
-  btn.style.cursor = 'pointer';
+  btn.style.cursor        = 'pointer';
   btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6.5" stroke="var(--navy)"/><path d="M3 7.5L5.5 10.5L11 4" stroke="var(--navy)" stroke-width="1.6" stroke-linecap="round"/></svg> Enviar para Helder Freire';
 }
 
-// Polling: checa o Turnstile a cada 500ms como fallback
-setInterval(() => {
-  if (!tsClienteToken) {
-    const r = window.turnstile?.getResponse('ts-cliente') || window.turnstile?.getResponse();
-    if (r && r.length > 10) onTsCliente(r);
+// ── Renderiza widget explicitamente (resolve o problema de hidden) ─
+// O widget auto-renderizado dentro de display:none nao registra
+// o callback. Esta funcao destroi e recria o widget enquanto visivel.
+function renderTurnstile(containerId, callbackFn) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  if (!window.turnstile) {
+    // Turnstile ainda nao carregou; aguarda e tenta de novo
+    setTimeout(() => renderTurnstile(containerId, callbackFn), 300);
+    return;
   }
-  if (!tsProprietarioToken) {
-    const r = window.turnstile?.getResponse('ts-proprietario');
-    if (r && r.length > 10) onTsProprietario(r);
-  }
-}, 500);
+  container.innerHTML = ''; // remove widget anterior
+  window.turnstile.render(container, {
+    sitekey:  TURNSTILE_SITEKEY,
+    callback: callbackFn,
+    theme:    'dark',
+  });
+}
 
 // ─── API Helper ──────────────────────────────────────────────────
 const API = {
@@ -592,14 +602,15 @@ function resetForm(tipo) {
 }
 
 function _resetTurnstileBtn(prefix) {
-  const isC = prefix === 'c';
-  const btnId = isC ? 'c-submit-btn' : 'p-submit-btn';
-  const tsId  = isC ? 'ts-cliente'   : 'ts-proprietario';
+  const isC   = prefix === 'c';
+  const btnId = isC ? 'c-submit-btn'    : 'p-submit-btn';
+  const tsId  = isC ? 'ts-cliente'      : 'ts-proprietario';
+  const cbFn  = isC ? onTsCliente       : onTsProprietario;
 
   // Limpa o token salvo
   if (isC) tsClienteToken = null; else tsProprietarioToken = null;
 
-  // Garante botão desativado
+  // Garante botao desativado
   const btn = document.getElementById(btnId);
   if (btn) {
     btn.style.opacity       = '0.4';
@@ -607,16 +618,8 @@ function _resetTurnstileBtn(prefix) {
     btn.style.cursor        = 'not-allowed';
   }
 
-  // Reseta o widget Turnstile DEPOIS que o step ficou visível
-  setTimeout(() => {
-    const container = document.getElementById(tsId);
-    if (!container) return;
-    try {
-      if (window.turnstile) {
-        window.turnstile.reset(container);
-      }
-    } catch (_) { /* ignora se o widget ainda não existir */ }
-  }, 150);
+  // Aguarda o step ficar visivel (display:block via CSS) antes de renderizar
+  setTimeout(() => renderTurnstile(tsId, cbFn), 200);
 }
 
 function nextStep(prefix, from, to) {
