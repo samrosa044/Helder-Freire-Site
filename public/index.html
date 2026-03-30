@@ -45,6 +45,10 @@
   </div>
 </div>
 
+<!-- ══ MODAL DETALHES ══ -->
+<div id="det-modal" style="display:none;position:fixed;inset:0;z-index:5000;background:rgba(0,0,0,.75);align-items:center;justify-content:center;padding:16px" onclick="if(event.target===this)closeDetModal()">
+</div>
+
 <!-- ══ NAV ══ -->
 <nav id="navbar">
   <a href="#" class="nav-logo">
@@ -556,7 +560,7 @@
         </div>
         <div class="adm-table-wrap">
           <table class="adm-table">
-            <thead><tr><th>Tipo</th><th>Proprietário</th><th>WhatsApp</th><th>Endereço/Local</th><th>Valor</th><th>Data</th><th>Status / Ações</th></tr></thead>
+            <thead><tr><th>#</th><th>Tipo</th><th>Nome</th><th>WhatsApp</th><th>Local</th><th>Valor</th><th>Data</th><th>Ações</th></tr></thead>
             <tbody id="pendentes-tbody"></tbody>
           </table>
         </div>
@@ -571,7 +575,7 @@
         </div>
         <div class="adm-table-wrap">
           <table class="adm-table">
-            <thead><tr><th>Tipo</th><th>Nome/Endereço</th><th>Valor</th><th>Cidade</th><th>Status</th><th>Ações</th></tr></thead>
+            <thead><tr><th>#</th><th>Tipo</th><th>Nome/Endereço</th><th>Valor</th><th>Cidade</th><th>Status</th><th>Ações</th></tr></thead>
             <tbody id="imoveis-tbody"></tbody>
           </table>
         </div>

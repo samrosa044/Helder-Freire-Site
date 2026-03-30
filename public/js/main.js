@@ -4,79 +4,44 @@
 //  localStorage → API REST segura
 // ═══════════════════════════════════════════════════
 
-// ─── Cloudflare Turnstile — Explicit + Execute mode ─────────────
-// Usando execution:'execute' conforme documentação oficial do Cloudflare
-// para formulários multi-step (developers.cloudflare.com/turnstile).
-// Os widgets são pré-renderizados mas o desafio só corre quando
-// chamamos turnstile.execute(widgetId), ou seja, quando o step
-// fica visível. Isso garante que o callback sempre dispara.
-
+// ─── Cloudflare Turnstile — execution:execute ────────────────────
 const TS_SITEKEY = '0x4AAAAAACxUqF1s-5o5oIzJ';
-const _tsW = {};  // guarda os widget IDs retornados por turnstile.render()
+const _tsW = {};
+let tsCadastroToken = null, tsClienteToken = null, tsProprietarioToken = null;
 
-let tsCadastroToken     = null;
-let tsClienteToken      = null;
-let tsProprietarioToken = null;
-
-// ── Callbacks ─────────────────────────────────────────────────────
 function onTsCadastro(token) {
   tsCadastroToken = token;
   const btn = document.getElementById('btn-cadastro-submit');
   if (!btn) return;
-  btn.disabled = false;
-  btn.removeAttribute('style');
+  btn.disabled = false; btn.removeAttribute('style');
   btn.textContent = 'Enviar Cadastro para Análise';
 }
-
 function onTsCliente(token) {
   tsClienteToken = token;
   const btn = document.getElementById('c-submit-btn');
   if (!btn) return;
-  btn.style.opacity       = '1';
-  btn.style.pointerEvents = 'auto';
-  btn.style.cursor        = 'pointer';
-  btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6.5" stroke="var(--navy)"/><path d="M3 7.5L5.5 10.5L11 4" stroke="var(--navy)" stroke-width="1.6" stroke-linecap="round"/></svg> Enviar Solicitação';
+  btn.style.opacity='1'; btn.style.pointerEvents='auto'; btn.style.cursor='pointer';
+  btn.innerHTML='<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6.5" stroke="var(--navy)"/><path d="M3 7.5L5.5 10.5L11 4" stroke="var(--navy)" stroke-width="1.6" stroke-linecap="round"/></svg> Enviar Solicitação';
 }
-
 function onTsProprietario(token) {
   tsProprietarioToken = token;
   const btn = document.getElementById('p-submit-btn');
   if (!btn) return;
-  btn.style.opacity       = '1';
-  btn.style.pointerEvents = 'auto';
-  btn.style.cursor        = 'pointer';
-  btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6.5" stroke="var(--navy)"/><path d="M3 7.5L5.5 10.5L11 4" stroke="var(--navy)" stroke-width="1.6" stroke-linecap="round"/></svg> Enviar para Helder Freire';
+  btn.style.opacity='1'; btn.style.pointerEvents='auto'; btn.style.cursor='pointer';
+  btn.innerHTML='<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6.5" stroke="var(--navy)"/><path d="M3 7.5L5.5 10.5L11 4" stroke="var(--navy)" stroke-width="1.6" stroke-linecap="round"/></svg> Enviar para Helder Freire';
 }
-
-// ── Inicialização: chamada automaticamente pelo Turnstile script ──
-// O parâmetro &onload=_tsInit no src garante que esta função é chamada
-// assim que o Turnstile estiver pronto, antes de qualquer interação.
 function _tsInit() {
-  // Pré-renderiza todos os widgets com execution:'execute'
-  // O desafio NÃO roda agora — só quando chamarmos turnstile.execute()
-  _tsW.cadastro     = window.turnstile.render('#ts-cadastro',     { sitekey: TS_SITEKEY, callback: onTsCadastro,     execution: 'execute', theme: 'dark' });
-  _tsW.cliente      = window.turnstile.render('#ts-cliente',      { sitekey: TS_SITEKEY, callback: onTsCliente,      execution: 'execute', theme: 'dark' });
-  _tsW.proprietario = window.turnstile.render('#ts-proprietario', { sitekey: TS_SITEKEY, callback: onTsProprietario, execution: 'execute', theme: 'dark' });
+  _tsW.cadastro     = window.turnstile.render('#ts-cadastro',     {sitekey:TS_SITEKEY, callback:onTsCadastro,     execution:'execute', theme:'dark'});
+  _tsW.cliente      = window.turnstile.render('#ts-cliente',      {sitekey:TS_SITEKEY, callback:onTsCliente,      execution:'execute', theme:'dark'});
+  _tsW.proprietario = window.turnstile.render('#ts-proprietario', {sitekey:TS_SITEKEY, callback:onTsProprietario, execution:'execute', theme:'dark'});
 }
-
-// ── Executa o desafio para um widget específico ───────────────────
-// Deve ser chamado SOMENTE quando o container está visível.
-// Se o token já existir (desafio anterior ainda válido), reutiliza.
-// Caso contrário, reseta o widget e inicia um novo desafio.
-function _tsExecute(widgetKey, btnId, clearToken) {
-  clearToken();
+function _tsExecute(key, btnId, clearFn) {
+  clearFn();
   const btn = document.getElementById(btnId);
-  if (btn) {
-    btn.style.opacity       = '0.4';
-    btn.style.pointerEvents = 'none';
-    btn.style.cursor        = 'not-allowed';
-  }
-  const wId = _tsW[widgetKey];
+  if (btn) { btn.style.opacity='0.4'; btn.style.pointerEvents='none'; btn.style.cursor='not-allowed'; }
+  const wId = _tsW[key];
   if (!wId || !window.turnstile) return;
-  try {
-    window.turnstile.reset(wId);
-    window.turnstile.execute(wId);
-  } catch(e) { console.warn('Turnstile execute error:', e); }
+  try { window.turnstile.reset(wId); window.turnstile.execute(wId); } catch(e) {}
 }
 
 // ─── API Helper ──────────────────────────────────────────────────
@@ -199,7 +164,6 @@ function openCadastroModal() {
   document.getElementById('cadastroBody').style.display = 'block';
   document.getElementById('cadastroSuccess').classList.remove('show');
   document.body.style.overflow = 'hidden';
-  // Modal visível: executa o desafio Turnstile agora
   _tsExecute('cadastro', 'btn-cadastro-submit', () => { tsCadastroToken = null; });
 }
 
@@ -375,11 +339,13 @@ async function renderPendentes() {
     }
 
     tb.innerHTML = lista.map(p => {
+      const numId     = '#' + String(p.id).padStart(4,'0');
       const tipoLabel = `${TYPE_ICONS[p.tipo_imovel] || '🏠'} ${TYPE_LABELS[p.tipo_imovel] || p.tipo_imovel}`;
       const wa        = `<a href="https://wa.me/55${(p.whatsapp||'').replace(/\D/g,'')}" target="_blank" style="color:var(--green)">${p.whatsapp}</a>`;
       const data      = new Date(p.criado_em).toLocaleDateString('pt-BR');
       const valor     = p.valor ? 'R$ ' + p.valor : '-';
       const local     = p.endereco || p.cidade || '-';
+      const pJson     = JSON.stringify(p).replace(/</g,'\u003c').replace(/\\/g,'\\\\').replace(/'/g,"\\'");
 
       let acoes = '';
       if (status === 'pendente') {
@@ -397,8 +363,9 @@ async function renderPendentes() {
 
       return `
         <tr>
-          <td>${tipoLabel}</td>
-          <td><strong>${p.nome}</strong>${p.formulario === 'cliente' ? '<br><span style="font-size:10px;color:var(--textl)">Cliente</span>' : ''}</td>
+          <td><button onclick='openDetalhes(${JSON.stringify(p).replace(/'/g,"&#39;")})' style="background:var(--navy);color:var(--gold);border:none;cursor:pointer;font-size:11px;font-weight:700;padding:3px 8px;border-radius:5px;font-family:inherit">${numId}</button></td>
+          <td>${tipoLabel}${p.formulario==='cliente'?'<br><small style="color:var(--textl)">👤 Cliente</small>':'<br><small style="color:var(--textl)">🏠 Proprietário</small>'}</td>
+          <td><strong>${p.nome}</strong></td>
           <td>${wa}</td>
           <td>${local}</td>
           <td>${valor}</td>
@@ -459,8 +426,11 @@ async function renderImoveis(busca = '') {
       return;
     }
 
-    tb.innerHTML = lista.map(im => `
+    tb.innerHTML = lista.map(im => {
+      const numId = '#' + String(im.id).padStart(4,'0');
+      return `
       <tr>
+        <td><button onclick='openDetalhes(${JSON.stringify(im).replace(/'/g,"&#39;")})' style="background:var(--navy);color:var(--gold);border:none;cursor:pointer;font-size:11px;font-weight:700;padding:3px 8px;border-radius:5px;font-family:inherit">${numId}</button></td>
         <td>${TYPE_ICONS[im.tipo] || '🏠'} ${TYPE_LABELS[im.tipo] || im.tipo}</td>
         <td><strong>${im.titulo}</strong></td>
         <td style="color:var(--navy-light);font-weight:600">R$ ${im.valor}</td>
@@ -472,7 +442,8 @@ async function renderImoveis(busca = '') {
           </button>
           <button class="act-btn act-delete" onclick="delImovel(${im.id})">Excluir</button>
         </td>
-      </tr>`).join('');
+      </tr>`;
+    }).join('');
   } catch (e) {
     tb.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--red)">Erro ao carregar.</td></tr>';
   }
@@ -652,13 +623,8 @@ function nextStep(prefix, from, to) {
     if (i + 1 === to) s.classList.add('active');
   });
 
-  // Step de verificação ficou visível: executa o desafio Turnstile agora.
-  // execution:'execute' garante que o desafio corre com o elemento visível,
-  // e o callback onTsCliente / onTsProprietario ativa o botão ao completar.
-  if (prefix === 'c' && to === 3)
-    _tsExecute('cliente',      'c-submit-btn', () => { tsClienteToken      = null; });
-  if (prefix === 'p' && to === 4)
-    _tsExecute('proprietario', 'p-submit-btn', () => { tsProprietarioToken = null; });
+  if (prefix === 'c' && to === 3) _tsExecute('cliente',      'c-submit-btn', () => { tsClienteToken      = null; });
+  if (prefix === 'p' && to === 4) _tsExecute('proprietario', 'p-submit-btn', () => { tsProprietarioToken = null; });
 }
 
 function selTipo(btn, inputId, valor) {
@@ -754,6 +720,83 @@ async function submitForm(tipo) {
     submitBtn.disabled    = false;
     submitBtn.textContent = 'Enviar';
   }
+}
+
+
+// ─── Modal Detalhes ───────────────────────────────────────────────
+function openDetalhes(d) {
+  if (typeof d === 'string') d = JSON.parse(d);
+  const isImovel = !!d.titulo;
+  const numId = '#' + String(d.id).padStart(4,'0');
+  const extras = (() => { try { return JSON.parse(d.dados_extras||'{}'); } catch { return {}; } })();
+  const extraHtml = Object.entries(extras).filter(([,v])=>v).map(([k,v])=>
+    `<tr><td class="det-l">${k.replace(/_/g,' ')}</td><td class="det-v">${v}</td></tr>`).join('');
+
+  let rows = '';
+  if (isImovel) {
+    rows = `
+      <tr><td class="det-l">Tipo</td><td class="det-v">${TYPE_ICONS[d.tipo]||''} ${TYPE_LABELS[d.tipo]||d.tipo||'-'}</td></tr>
+      <tr><td class="det-l">Modalidade</td><td class="det-v">${d.modal||'-'}</td></tr>
+      <tr><td class="det-l">Endereço</td><td class="det-v">${d.endereco||'-'}</td></tr>
+      <tr><td class="det-l">Cidade</td><td class="det-v">${d.cidade||'-'}</td></tr>
+      <tr><td class="det-l">Valor</td><td class="det-v" style="color:var(--navy-light);font-weight:600">${d.valor?'R$ '+d.valor:'-'}</td></tr>
+      <tr><td class="det-l">Área</td><td class="det-v">${d.area||'-'}</td></tr>
+      <tr><td class="det-l">Quartos</td><td class="det-v">${d.quartos||'-'}</td></tr>
+      <tr><td class="det-l">Vagas</td><td class="det-v">${d.vagas||'-'}</td></tr>
+      <tr><td class="det-l">Status</td><td class="det-v">${d.status||'-'}</td></tr>
+      <tr><td class="det-l">Destaque</td><td class="det-v">${d.destaque||'Não'}</td></tr>
+      <tr><td class="det-l">Fotos</td><td class="det-v">${d.fotos?`<a href="${d.fotos}" target="_blank">Ver fotos</a>`:'-'}</td></tr>
+      <tr><td class="det-l">Descrição</td><td class="det-v">${d.descricao||'-'}</td></tr>
+      <tr><td class="det-l">Cadastrado em</td><td class="det-v">${new Date(d.criado_em).toLocaleString('pt-BR')}</td></tr>`;
+  } else {
+    const tipo = d.formulario==='cliente' ? '👤 Cliente buscando imóvel' : '🏠 Proprietário';
+    const statusCor = {pendente:'#f59e0b',aprovado:'#16a34a',rejeitado:'#dc2626'}[d.status]||'#64748b';
+    rows = `
+      <tr><td class="det-l">Formulário</td><td class="det-v">${tipo}</td></tr>
+      <tr><td class="det-l">Nome</td><td class="det-v"><strong>${d.nome||'-'}</strong></td></tr>
+      <tr><td class="det-l">WhatsApp</td><td class="det-v"><a href="https://wa.me/55${(d.whatsapp||'').replace(/\D/g,'')}" target="_blank" style="color:#16a34a">${d.whatsapp||'-'}</a></td></tr>
+      <tr><td class="det-l">E-mail</td><td class="det-v">${d.email||'-'}</td></tr>
+      <tr><td class="det-l">Tipo Imóvel</td><td class="det-v">${TYPE_ICONS[d.tipo_imovel]||''} ${TYPE_LABELS[d.tipo_imovel]||d.tipo_imovel||'-'}</td></tr>
+      <tr><td class="det-l">Modalidade</td><td class="det-v">${d.modalidade||'-'}</td></tr>
+      <tr><td class="det-l">Proprietário</td><td class="det-v">${d.proprietario||'-'}</td></tr>
+      <tr><td class="det-l">Endereço</td><td class="det-v">${d.endereco||'-'}</td></tr>
+      <tr><td class="det-l">Cidade</td><td class="det-v">${d.cidade||'-'}</td></tr>
+      <tr><td class="det-l">Valor</td><td class="det-v" style="color:var(--navy-light);font-weight:600">${d.valor?'R$ '+d.valor:'-'}</td></tr>
+      <tr><td class="det-l">Área</td><td class="det-v">${d.area||'-'}</td></tr>
+      <tr><td class="det-l">Quartos</td><td class="det-v">${d.quartos||'-'}</td></tr>
+      <tr><td class="det-l">Suítes</td><td class="det-v">${d.suites||'-'}</td></tr>
+      <tr><td class="det-l">Vagas</td><td class="det-v">${d.vagas||'-'}</td></tr>
+      <tr><td class="det-l">Cond./IPTU</td><td class="det-v">${d.condo_iptu||'-'}</td></tr>
+      <tr><td class="det-l">Fotos</td><td class="det-v">${d.fotos?`<a href="${d.fotos}" target="_blank">Ver fotos</a>`:'-'}</td></tr>
+      <tr><td class="det-l">Descrição</td><td class="det-v">${d.descricao||'-'}</td></tr>
+      ${extraHtml}
+      <tr><td class="det-l">Status</td><td class="det-v"><strong style="color:${statusCor}">${d.status||'-'}</strong></td></tr>
+      ${d.motivo_rejeicao?`<tr><td class="det-l">Motivo</td><td class="det-v" style="color:#dc2626">${d.motivo_rejeicao}</td></tr>`:''}
+      <tr><td class="det-l">Enviado em</td><td class="det-v">${new Date(d.criado_em).toLocaleString('pt-BR')}</td></tr>`;
+  }
+
+  document.getElementById('det-modal').innerHTML = `
+    <div class="det-card">
+      <div class="det-card-header">
+        <div style="display:flex;align-items:center;gap:10px">
+          <span style="background:var(--gold);color:var(--navy);font-size:13px;font-weight:800;padding:4px 12px;border-radius:6px">${numId}</span>
+          <span style="color:rgba(255,255,255,.7);font-size:13px">${isImovel ? (d.titulo||'Imóvel') : (d.nome||'Cadastro')}</span>
+        </div>
+        <button onclick="closeDetModal()" style="background:none;border:none;color:rgba(255,255,255,.6);font-size:22px;cursor:pointer;line-height:1">×</button>
+      </div>
+      <div style="overflow-y:auto;max-height:65vh">
+        <table class="det-table"><tbody>${rows}</tbody></table>
+      </div>
+      <div class="det-card-footer">
+        ${!isImovel && d.status==='pendente' ? `<button class="act-btn act-approve" onclick="aprovar(${d.id});closeDetModal()">✓ Aprovar</button><button class="act-btn act-reject" onclick="closeDetModal();openReject(${d.id})">✗ Rejeitar</button>` : ''}
+        <button class="adm-btn adm-btn-ghost" onclick="closeDetModal()">Fechar</button>
+      </div>
+    </div>`;
+  document.getElementById('det-modal').style.display='flex';
+}
+function closeDetModal() {
+  const m = document.getElementById('det-modal');
+  if (m) m.style.display='none';
 }
 
 // ─── Event Listeners ──────────────────────────────────────────────
