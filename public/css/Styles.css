@@ -694,3 +694,19 @@ footer{background:#06122e;border-top:1px solid rgba(201,168,76,.1);padding:50px 
   .iform-next.btn-locked{opacity:.5!important;cursor:not-allowed!important;pointer-events:none!important}
   .iform-next:not(.btn-locked){opacity:1;cursor:pointer;pointer-events:auto}
   .modal-submit:not(:disabled){opacity:1;cursor:pointer;pointer-events:auto}
+/* ── Modal de Detalhes ── */
+.det-modal-card{background:var(--white);border-radius:14px;padding:0;max-width:720px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 24px 80px rgba(0,0,0,.18)}
+.det-header{background:var(--navy);padding:24px 28px;border-radius:14px 14px 0 0}
+.det-id{display:inline-block;background:var(--gold);color:var(--navy);font-size:13px;font-weight:800;padding:4px 12px;border-radius:6px;letter-spacing:.5px;flex-shrink:0}
+.det-title{font-size:18px;font-weight:700;color:var(--white);margin-top:2px}
+.det-subtitle{font-size:12px;color:rgba(255,255,255,.55);margin-top:2px}
+.det-status-badge{display:inline-block;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;border:1.5px solid;margin-left:auto}
+.det-grid{display:grid;grid-template-columns:1fr 1fr;gap:0;padding:0}
+@media(max-width:600px){.det-grid{grid-template-columns:1fr}}
+.det-section{padding:20px 28px;border-bottom:1px solid var(--g100)}
+.det-section-title{font-size:11px;font-weight:700;color:var(--textl);letter-spacing:.8px;text-transform:uppercase;margin-bottom:12px}
+.det-row{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;padding:5px 0;border-bottom:1px solid var(--g100);font-size:13px}
+.det-row:last-child{border-bottom:none}
+.det-label{color:var(--textl);flex-shrink:0;min-width:90px;font-size:12px}
+.det-val{color:var(--text);font-weight:500;text-align:right;word-break:break-word}
+.det-actions{padding:16px 28px;display:flex;gap:8px;flex-wrap:wrap;border-top:1px solid var(--g100)}
