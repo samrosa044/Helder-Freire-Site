@@ -123,12 +123,17 @@ export async function onRequestPost({ request, env }) {
 
     const extras = JSON.stringify(d.dados_extras || {});
 
+    // ── Auto-migration: adiciona colunas cpf/cep se não existirem ──
+    try { await DB.prepare('ALTER TABLE pendentes ADD COLUMN cpf TEXT').run(); } catch (_) {}
+    try { await DB.prepare('ALTER TABLE pendentes ADD COLUMN cep TEXT').run(); } catch (_) {}
+
     await DB.prepare(
-      'INSERT INTO pendentes (formulario, tipo_imovel, modalidade, nome, whatsapp, email, proprietario, endereco, cidade, valor, area, quartos, suites, vagas, fotos, descricao, condo_iptu, dados_extras) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+      'INSERT INTO pendentes (formulario, tipo_imovel, modalidade, nome, whatsapp, email, cpf, cep, proprietario, endereco, cidade, valor, area, quartos, suites, vagas, fotos, descricao, condo_iptu, dados_extras) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
     ).bind(
       d.formulario || 'proprietario',
       d.tipo_imovel || '', d.modalidade || 'Venda',
       d.nome, d.whatsapp, d.email || '',
+      d.cpf || '', d.cep || '',
       d.proprietario || '', d.endereco || '',
       d.cidade || 'Passos', d.valor || '',
       d.area || '', d.quartos || '', d.suites || '',

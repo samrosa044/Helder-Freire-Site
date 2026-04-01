@@ -39,14 +39,20 @@ export async function onRequestPost({ request, env }) {
       return json({ erro: 'Verificação de segurança inválida. Recarregue a página e tente novamente.' }, 403);
     }
 
-    await ( env.DB || env.helder_freire_imoveis ).prepare(`
+    const DB_leads = env.DB || env.helder_freire_imoveis;
+
+    // ── Auto-migration: adiciona coluna cpf se não existir ──
+    try { await DB_leads.prepare('ALTER TABLE leads ADD COLUMN cpf TEXT').run(); } catch (_) {}
+
+    await DB_leads.prepare(`
       INSERT INTO leads
-        (nome, whatsapp, email, tipo_imovel, finalidade,
+        (nome, whatsapp, email, cpf, tipo_imovel, finalidade,
          valor_maximo, quartos_minimo, bairro, observacoes,
          como_contatar, prazo)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).bind(
       d.nome, d.whatsapp, d.email || '',
+      d.cpf || '',
       d.tipo_imovel || '', d.finalidade || '',
       d.valor_maximo || '', d.quartos_minimo || '',
       d.bairro || '', d.observacoes || '',

@@ -521,25 +521,71 @@ async function salvarImovelAdmin() {
 async function renderLeads() {
   const tb = document.getElementById('leads-tbody');
   if (!tb) return;
-  tb.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px">⏳ Carregando...</td></tr>';
+  tb.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:20px">⏳ Carregando...</td></tr>';
 
   try {
     const leads = await API.get('/leads', true);
     if (!leads.length) {
-      tb.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:40px;color:var(--textl)">Nenhum lead ainda</td></tr>';
+      tb.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--textl)">Nenhum lead ainda</td></tr>';
       return;
     }
-    tb.innerHTML = leads.map(l => `
+    tb.innerHTML = leads.map(l => {
+      const numId = '#' + String(l.id).padStart(4, '0');
+      const lJson = JSON.stringify(l).replace(/'/g, "&#39;");
+      return `
       <tr>
+        <td><button onclick='openLeadDetalhes(${lJson})' style="background:var(--navy);color:var(--gold);border:none;cursor:pointer;font-size:11px;font-weight:700;padding:3px 8px;border-radius:5px;font-family:inherit">${numId}</button></td>
         <td><strong>${l.nome}</strong></td>
         <td><a href="https://wa.me/55${(l.whatsapp||'').replace(/\D/g,'')}" target="_blank" style="color:var(--green)">${l.whatsapp}</a></td>
-        <td>${TYPE_ICONS[l.tipo_imovel] || ''} ${TYPE_LABELS[l.tipo_imovel] || l.tipo_imovel || '-'}</td>
+        <td>${l.email ? `<a href="mailto:${l.email}" style="color:var(--textl);font-size:12px">${l.email}</a>` : '-'}</td>
+        <td>${TYPE_ICONS[l.tipo_imovel] || '🏠'} ${TYPE_LABELS[l.tipo_imovel] || l.tipo_imovel || '-'}</td>
         <td>${l.valor_maximo || '-'}</td>
         <td style="white-space:nowrap">${new Date(l.criado_em).toLocaleDateString('pt-BR')}</td>
-      </tr>`).join('');
+      </tr>`;
+    }).join('');
   } catch (e) {
-    tb.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--red)">Erro ao carregar leads.</td></tr>';
+    tb.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--red)">Erro ao carregar leads.</td></tr>';
   }
+}
+
+function openLeadDetalhes(l) {
+  if (typeof l === 'string') l = JSON.parse(l);
+  const numId = '#' + String(l.id).padStart(4, '0');
+  const FINALIDADE_LABELS = { Comprar: 'Comprar', Alugar: 'Alugar' };
+  const rows = `
+    <tr><td class="det-l">Nº do Chamado</td><td class="det-v"><strong style="color:var(--gold)">${numId}</strong></td></tr>
+    <tr><td class="det-l">Nome</td><td class="det-v"><strong>${l.nome||'-'}</strong></td></tr>
+    <tr><td class="det-l">WhatsApp</td><td class="det-v"><a href="https://wa.me/55${(l.whatsapp||'').replace(/\D/g,'')}" target="_blank" style="color:#16a34a">${l.whatsapp||'-'}</a></td></tr>
+    <tr><td class="det-l">E-mail</td><td class="det-v">${l.email ? `<a href="mailto:${l.email}" style="color:var(--navy-light)">${l.email}</a>` : '-'}</td></tr>
+    <tr><td class="det-l">CPF</td><td class="det-v">${l.cpf||'-'}</td></tr>
+    <tr><td class="det-l">Tipo de Imóvel</td><td class="det-v">${TYPE_ICONS[l.tipo_imovel]||'🏠'} ${TYPE_LABELS[l.tipo_imovel]||l.tipo_imovel||'-'}</td></tr>
+    <tr><td class="det-l">Finalidade</td><td class="det-v">${l.finalidade||'-'}</td></tr>
+    <tr><td class="det-l">Valor Máximo</td><td class="det-v">${l.valor_maximo||'-'}</td></tr>
+    <tr><td class="det-l">Quartos Mínimo</td><td class="det-v">${l.quartos_minimo||'-'}</td></tr>
+    <tr><td class="det-l">Bairro / Região</td><td class="det-v">${l.bairro||'-'}</td></tr>
+    <tr><td class="det-l">Observações</td><td class="det-v">${l.observacoes||'-'}</td></tr>
+    <tr><td class="det-l">Como Contatar</td><td class="det-v">${l.como_contatar||'-'}</td></tr>
+    <tr><td class="det-l">Prazo</td><td class="det-v">${l.prazo||'-'}</td></tr>
+    <tr><td class="det-l">Recebido em</td><td class="det-v">${new Date(l.criado_em).toLocaleString('pt-BR')}</td></tr>`;
+
+  document.getElementById('det-modal').innerHTML = `
+    <div class="det-card">
+      <div class="det-card-header">
+        <div style="display:flex;align-items:center;gap:10px">
+          <span style="background:var(--gold);color:var(--navy);font-size:13px;font-weight:800;padding:4px 12px;border-radius:6px">${numId}</span>
+          <span style="color:rgba(255,255,255,.7);font-size:13px">👤 Lead — ${l.nome||'Cliente'}</span>
+        </div>
+        <button onclick="closeDetModal()" style="background:none;border:none;color:rgba(255,255,255,.6);font-size:22px;cursor:pointer;line-height:1">×</button>
+      </div>
+      <div style="overflow-y:auto;max-height:65vh">
+        <table class="det-table"><tbody>${rows}</tbody></table>
+      </div>
+      <div class="det-card-footer">
+        <a href="https://wa.me/55${(l.whatsapp||'').replace(/\D/g,'')}" target="_blank" class="act-btn act-approve" style="text-decoration:none">📲 WhatsApp</a>
+        <button class="adm-btn adm-btn-ghost" onclick="closeDetModal()">Fechar</button>
+      </div>
+    </div>`;
+  document.getElementById('det-modal').style.display = 'flex';
 }
 
 // ─── Auditoria (Admin) ────────────────────────────────────────────
@@ -593,21 +639,140 @@ function resetForm(tipo) {
   if (succ) succ.classList.remove('show');
 }
 
+// ─── Validações de Campos ─────────────────────────────────────────
+function validarEmail(email) {
+  if (!email) return true; // opcional
+  return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email.trim());
+}
+
+function validarCPF(cpf) {
+  if (!cpf) return true; // opcional
+  const n = cpf.replace(/\D/g, '');
+  if (n.length !== 11 || /^(\d)\1+$/.test(n)) return false;
+  let s = 0;
+  for (let i = 0; i < 9; i++) s += +n[i] * (10 - i);
+  let r = (s * 10) % 11; if (r === 10 || r === 11) r = 0;
+  if (r !== +n[9]) return false;
+  s = 0;
+  for (let i = 0; i < 10; i++) s += +n[i] * (11 - i);
+  r = (s * 10) % 11; if (r === 10 || r === 11) r = 0;
+  return r === +n[10];
+}
+
+function validarWhatsApp(wa) {
+  const n = wa.replace(/\D/g, '');
+  return n.length >= 10 && n.length <= 11;
+}
+
+function formatarWhatsApp(input) {
+  let v = input.value.replace(/\D/g, '').slice(0, 11);
+  if (v.length <= 2) v = v;
+  else if (v.length <= 6) v = `(${v.slice(0,2)}) ${v.slice(2)}`;
+  else if (v.length <= 10) v = `(${v.slice(0,2)}) ${v.slice(2,6)}-${v.slice(6)}`;
+  else v = `(${v.slice(0,2)}) ${v.slice(2,7)}-${v.slice(7)}`;
+  input.value = v;
+}
+
+function formatarCPF(input) {
+  let v = input.value.replace(/\D/g, '').slice(0, 11);
+  if (v.length > 9) v = v.replace(/(\d{3})(\d{3})(\d{3})(\d{1,2})/, '$1.$2.$3-$4');
+  else if (v.length > 6) v = v.replace(/(\d{3})(\d{3})(\d{1,3})/, '$1.$2.$3');
+  else if (v.length > 3) v = v.replace(/(\d{3})(\d{1,3})/, '$1.$2');
+  input.value = v;
+}
+
+function formatarCEP(input) {
+  let v = input.value.replace(/\D/g, '').slice(0, 8);
+  if (v.length > 5) v = v.replace(/(\d{5})(\d{1,3})/, '$1-$2');
+  input.value = v;
+}
+
+async function buscarCEP(input) {
+  const cep = input.value.replace(/\D/g, '');
+  if (cep.length !== 8) return;
+  try {
+    const r = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+    const d = await r.json();
+    if (d.erro) { mostrarErroCampo(input, 'CEP não encontrado'); return; }
+    limparErroCampo(input);
+    // preenche campos de endereço se existirem
+    const endEl   = document.getElementById('p-end');
+    const cidEl   = document.getElementById('p-cidade');
+    if (endEl && !endEl.value) endEl.value = [d.logradouro, d.bairro].filter(Boolean).join(', ');
+    if (cidEl && !cidEl.value) cidEl.value = d.localidade || 'Passos';
+  } catch {}
+}
+
+function mostrarErroCampo(input, msg) {
+  limparErroCampo(input);
+  input.style.borderColor = '#dc2626';
+  const err = document.createElement('div');
+  err.className = 'field-error';
+  err.style.cssText = 'color:#dc2626;font-size:11px;margin-top:3px;font-weight:500';
+  err.textContent = '⚠ ' + msg;
+  input.parentNode.appendChild(err);
+}
+
+function limparErroCampo(input) {
+  input.style.borderColor = '';
+  const old = input.parentNode.querySelector('.field-error');
+  if (old) old.remove();
+}
+
 function nextStep(prefix, from, to) {
+  // ── Validações Step 1 Cliente ──────────────────────────────────
   if (prefix === 'c' && from === 1) {
-    const nome = document.getElementById('c-nome').value.trim();
-    const wa   = document.getElementById('c-wa').value.trim();
-    if (!nome || !wa) { alert('Por favor, preencha nome e WhatsApp.'); return; }
+    const nomeEl  = document.getElementById('c-nome');
+    const waEl    = document.getElementById('c-wa');
+    const emailEl = document.getElementById('c-email');
+    const cpfEl   = document.getElementById('c-cpf');
+
+    let ok = true;
+    if (!nomeEl.value.trim()) { mostrarErroCampo(nomeEl, 'Nome é obrigatório'); ok = false; }
+    else limparErroCampo(nomeEl);
+    if (!validarWhatsApp(waEl.value)) { mostrarErroCampo(waEl, 'WhatsApp inválido — informe DDD + número'); ok = false; }
+    else limparErroCampo(waEl);
+    if (emailEl && emailEl.value && !validarEmail(emailEl.value)) { mostrarErroCampo(emailEl, 'E-mail inválido'); ok = false; }
+    else if (emailEl) limparErroCampo(emailEl);
+    if (cpfEl && cpfEl.value && !validarCPF(cpfEl.value)) { mostrarErroCampo(cpfEl, 'CPF inválido'); ok = false; }
+    else if (cpfEl) limparErroCampo(cpfEl);
+    if (!ok) return;
   }
+
+  // ── Validações Step 2 Proprietário ────────────────────────────
   if (prefix === 'p' && from === 2) {
-    const nome = document.getElementById('p-nome').value.trim();
-    const wa   = document.getElementById('p-wa').value.trim();
-    if (!nome || !wa) { alert('Por favor, preencha nome e WhatsApp.'); return; }
+    const nomeEl  = document.getElementById('p-nome');
+    const waEl    = document.getElementById('p-wa');
+    const emailEl = document.getElementById('p-email');
+    const cpfEl   = document.getElementById('p-cpf');
+
+    let ok = true;
+    if (!nomeEl.value.trim()) { mostrarErroCampo(nomeEl, 'Nome é obrigatório'); ok = false; }
+    else limparErroCampo(nomeEl);
+    if (!validarWhatsApp(waEl.value)) { mostrarErroCampo(waEl, 'WhatsApp inválido — informe DDD + número'); ok = false; }
+    else limparErroCampo(waEl);
+    if (emailEl && emailEl.value && !validarEmail(emailEl.value)) { mostrarErroCampo(emailEl, 'E-mail inválido'); ok = false; }
+    else if (emailEl) limparErroCampo(emailEl);
+    if (cpfEl && cpfEl.value.replace(/\D/g,'') && !validarCPF(cpfEl.value)) { mostrarErroCampo(cpfEl, 'CPF inválido'); ok = false; }
+    else if (cpfEl) limparErroCampo(cpfEl);
+    if (!ok) return;
   }
+
+  // ── Validações Step 3 Proprietário ────────────────────────────
   if (prefix === 'p' && from === 3) {
-    const end = document.getElementById('p-end').value.trim();
-    const val = document.getElementById('p-valor').value.trim();
-    if (!end || !val) { alert('Por favor, preencha o endereço e o valor.'); return; }
+    const endEl = document.getElementById('p-end');
+    const valEl = document.getElementById('p-valor');
+    const cepEl = document.getElementById('p-cep');
+
+    let ok = true;
+    if (!endEl.value.trim()) { mostrarErroCampo(endEl, 'Endereço é obrigatório'); ok = false; }
+    else limparErroCampo(endEl);
+    if (!valEl.value.trim()) { mostrarErroCampo(valEl, 'Valor é obrigatório'); ok = false; }
+    else limparErroCampo(valEl);
+    if (cepEl && cepEl.value.replace(/\D/g,'').length > 0 && cepEl.value.replace(/\D/g,'').length !== 8) {
+      mostrarErroCampo(cepEl, 'CEP deve ter 8 dígitos'); ok = false;
+    } else if (cepEl) limparErroCampo(cepEl);
+    if (!ok) return;
   }
 
   const formId = prefix === 'c' ? 'cliente' : 'proprietario';
@@ -661,17 +826,19 @@ async function submitForm(tipo) {
   try {
     if (isCliente) {
       await API.post('/leads', {
-        nome:           document.getElementById('c-nome').value,
-        whatsapp:       document.getElementById('c-wa').value,
-        email:          document.getElementById('c-email').value,
+        nome:           document.getElementById('c-nome').value.trim(),
+        whatsapp:       document.getElementById('c-wa').value.trim(),
+        email:          document.getElementById('c-email').value.trim(),
+        cpf:            document.getElementById('c-cpf')?.value.trim() || '',
         tipo_imovel:    document.getElementById('c-tipo').value,
         finalidade:     document.getElementById('c-final').value,
         valor_maximo:   document.getElementById('c-valor').value,
         quartos_minimo: document.getElementById('c-quartos').value,
-        bairro:         document.getElementById('c-bairro').value,
-        observacoes:    document.getElementById('c-obs').value,
+        bairro:         document.getElementById('c-bairro').value.trim(),
+        observacoes:    document.getElementById('c-obs').value.trim(),
         como_contatar:  document.getElementById('c-contato').value,
         prazo:          document.getElementById('c-prazo').value,
+        cf_token:       token,
       });
     } else {
       const tipoIm = document.getElementById('p-tipo').value;
@@ -694,15 +861,17 @@ async function submitForm(tipo) {
         formulario:   'proprietario',
         tipo_imovel:  tipoIm,
         modalidade:   document.getElementById('p-modal').value,
-        nome:         document.getElementById('p-nome').value,
-        whatsapp:     document.getElementById('p-wa').value,
-        email:        document.getElementById('p-email').value,
+        nome:         document.getElementById('p-nome').value.trim(),
+        whatsapp:     document.getElementById('p-wa').value.trim(),
+        email:        document.getElementById('p-email').value.trim(),
+        cpf:          document.getElementById('p-cpf')?.value.trim() || '',
         proprietario: document.getElementById('p-prop').value,
-        endereco:     document.getElementById('p-end').value,
-        cidade:       document.getElementById('p-cidade').value,
-        valor:        document.getElementById('p-valor').value,
-        fotos:        document.getElementById('p-fotos').value,
-        descricao:    document.getElementById('p-desc').value,
+        endereco:     document.getElementById('p-end').value.trim(),
+        cep:          document.getElementById('p-cep')?.value.trim() || '',
+        cidade:       document.getElementById('p-cidade').value.trim(),
+        valor:        document.getElementById('p-valor').value.trim(),
+        fotos:        document.getElementById('p-fotos').value.trim(),
+        descricao:    document.getElementById('p-desc').value.trim(),
         quartos:      document.getElementById('p-quartos')?.value || '',
         suites:       document.getElementById('p-suites')?.value  || '',
         vagas:        document.getElementById('p-vagas')?.value   || '',
@@ -756,9 +925,11 @@ function openDetalhes(d) {
       <tr><td class="det-l">Nome</td><td class="det-v"><strong>${d.nome||'-'}</strong></td></tr>
       <tr><td class="det-l">WhatsApp</td><td class="det-v"><a href="https://wa.me/55${(d.whatsapp||'').replace(/\D/g,'')}" target="_blank" style="color:#16a34a">${d.whatsapp||'-'}</a></td></tr>
       <tr><td class="det-l">E-mail</td><td class="det-v">${d.email||'-'}</td></tr>
+      <tr><td class="det-l">CPF</td><td class="det-v">${d.cpf||'-'}</td></tr>
       <tr><td class="det-l">Tipo Imóvel</td><td class="det-v">${TYPE_ICONS[d.tipo_imovel]||''} ${TYPE_LABELS[d.tipo_imovel]||d.tipo_imovel||'-'}</td></tr>
       <tr><td class="det-l">Modalidade</td><td class="det-v">${d.modalidade||'-'}</td></tr>
       <tr><td class="det-l">Proprietário</td><td class="det-v">${d.proprietario||'-'}</td></tr>
+      <tr><td class="det-l">CEP</td><td class="det-v">${d.cep||'-'}</td></tr>
       <tr><td class="det-l">Endereço</td><td class="det-v">${d.endereco||'-'}</td></tr>
       <tr><td class="det-l">Cidade</td><td class="det-v">${d.cidade||'-'}</td></tr>
       <tr><td class="det-l">Valor</td><td class="det-v" style="color:var(--navy-light);font-weight:600">${d.valor?'R$ '+d.valor:'-'}</td></tr>

@@ -46,7 +46,7 @@
 </div>
 
 <!-- ══ MODAL DETALHES ══ -->
-<div id="det-modal" style="display:none;position:fixed;inset:0;z-index:5000;background:rgba(0,0,0,.75);align-items:center;justify-content:center;padding:16px" onclick="if(event.target===this)closeDetModal()">
+<div id="det-modal" style="display:none;position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,.85);align-items:center;justify-content:center;padding:16px" onclick="if(event.target===this)closeDetModal()">
 </div>
 
 <!-- ══ NAV ══ -->
@@ -624,9 +624,9 @@
       <div class="adm-tab" id="tab-leads">
         <div class="adm-table-wrap">
           <table class="adm-table">
-            <thead><tr><th>Nome</th><th>WhatsApp</th><th>Interesse</th><th>Mensagem</th><th>Data</th></tr></thead>
+            <thead><tr><th>#</th><th>Nome</th><th>WhatsApp</th><th>E-mail</th><th>Interesse</th><th>Valor Máx.</th><th>Data</th></tr></thead>
             <tbody id="leads-tbody">
-              <tr><td colspan="5" style="text-align:center;padding:40px;color:var(--textl)">Nenhum lead recebido ainda</td></tr>
+              <tr><td colspan="7" style="text-align:center;padding:40px;color:var(--textl)">Nenhum lead recebido ainda</td></tr>
             </tbody>
           </table>
         </div>
@@ -697,9 +697,12 @@
           </div>
           <div class="ifgrid">
             <div class="ifg"><label>Nome Completo *</label><input type="text" id="c-nome" placeholder="Seu nome completo"></div>
-            <div class="ifg"><label>WhatsApp *</label><input type="text" id="c-wa" placeholder="(35) 99999-9999"></div>
+            <div class="ifg"><label>WhatsApp *</label><input type="text" id="c-wa" placeholder="(35) 99999-9999" oninput="formatarWhatsApp(this)"></div>
           </div>
-          <div class="ifg"><label>E-mail</label><input type="email" id="c-email" placeholder="seu@email.com.br"></div>
+          <div class="ifgrid">
+            <div class="ifg"><label>E-mail</label><input type="email" id="c-email" placeholder="seu@email.com.br"></div>
+            <div class="ifg"><label>CPF <span style="font-weight:400;opacity:.6">(opcional)</span></label><input type="text" id="c-cpf" placeholder="000.000.000-00" oninput="formatarCPF(this)" maxlength="14"></div>
+          </div>
           <div class="iform-nav">
             <button class="iform-next" onclick="nextStep('c',1,2)">Próximo → Tipo do Imóvel</button>
           </div>
@@ -825,9 +828,12 @@
           <div class="iform-slabel">Dados do Proprietário</div>
           <div class="ifgrid">
             <div class="ifg"><label>Nome Completo *</label><input type="text" id="p-nome" placeholder="Seu nome"></div>
-            <div class="ifg"><label>WhatsApp *</label><input type="text" id="p-wa" placeholder="(35) 99999-9999"></div>
+            <div class="ifg"><label>WhatsApp *</label><input type="text" id="p-wa" placeholder="(35) 99999-9999" oninput="formatarWhatsApp(this)"></div>
           </div>
-          <div class="ifg"><label>E-mail *</label><input type="email" id="p-email" placeholder="seu@email.com.br"></div>
+          <div class="ifgrid">
+            <div class="ifg"><label>E-mail *</label><input type="email" id="p-email" placeholder="seu@email.com.br"></div>
+            <div class="ifg"><label>CPF <span style="font-weight:400;opacity:.6">(opcional)</span></label><input type="text" id="p-cpf" placeholder="000.000.000-00" oninput="formatarCPF(this)" maxlength="14"></div>
+          </div>
           <div class="ifg"><label>Você é o proprietário?</label>
             <select id="p-prop"><option>Sim, sou o proprietário</option><option>Sou o cônjuge/familiar</option><option>Sou procurador/representante</option><option>Imóvel de inventário</option></select></div>
           <div class="iform-nav">
@@ -840,8 +846,11 @@
         <div class="iform-step" id="ps3">
           <div class="iform-slabel">Localização e Valor</div>
           <div class="ifgrid">
-            <div class="ifg iffull"><label>Endereço Completo *</label><input type="text" id="p-end" placeholder="Rua, número, bairro — ou localização rural"></div>
+            <div class="ifg"><label>CEP <span style="font-weight:400;opacity:.6">(opcional)</span></label><input type="text" id="p-cep" placeholder="00000-000" oninput="formatarCEP(this)" onblur="buscarCEP(this)" maxlength="9"></div>
             <div class="ifg"><label>Cidade *</label><input type="text" id="p-cidade" value="Passos"></div>
+          </div>
+          <div class="ifgrid">
+            <div class="ifg iffull"><label>Endereço Completo *</label><input type="text" id="p-end" placeholder="Rua, número, bairro — ou localização rural"></div>
             <div class="ifg"><label>Valor (R$) *</label><input type="text" id="p-valor" placeholder="Ex: 350.000"></div>
           </div>
 
