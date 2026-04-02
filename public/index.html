@@ -177,33 +177,149 @@
 </section>
 
 
-<!-- ══ FORMULÁRIOS INTEGRADOS ══ -->
+<!-- ══ CADASTRAR IMÓVEL ══ -->
 <section class="section section-light" id="cadastrar">
   <div class="container">
-    <div class="section-header" style="text-align:center;margin-bottom:56px">
-      <div class="eyebrow" style="justify-content:center"><div class="eyebrow-line"></div><span class="eyebrow-text">Formulários Online</span><div class="eyebrow-line"></div></div>
-      <h2 class="sec-title" style="font-size:clamp(28px,4vw,50px)">O que você <em>precisa?</em></h2>
-      <p style="font-size:14px;color:rgba(255,255,255,.5);margin-top:12px;max-width:540px;margin-left:auto;margin-right:auto">Escolha o formulário adequado. Os dados chegam direto para Helder Freire e são salvos automaticamente no Google Sheets.</p>
-    </div>
-    <div class="forms-cards-grid">
+    <div class="cad-split">
 
-            <!-- Card 2: Quero Vender/Alugar -->
-      <div class="fcard" onclick="openForm('proprietario')">
-        <div class="fcard-icon">🏠</div>
-        <div class="fcard-badge fcard-badge-gold">Para Proprietários</div>
-        <h3 class="fcard-title">Quero Vender ou<br>Alugar meu Imóvel</h3>
-        <p class="fcard-desc">Cadastre seu imóvel com todos os detalhes. Cada tipo tem campos específicos.</p>
-        <ul class="fcard-items">
-          <li><svg width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="6.5" r="6" stroke="#c9a84c" stroke-opacity=".6"/><path d="M3.5 6.8L5.2 8.8L9.5 4" stroke="#c9a84c" stroke-width="1.4" stroke-linecap="round"/></svg>Casa, Apê, Fazenda, Terreno...</li>
-          <li><svg width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="6.5" r="6" stroke="#c9a84c" stroke-opacity=".6"/><path d="M3.5 6.8L5.2 8.8L9.5 4" stroke="#c9a84c" stroke-width="1.4" stroke-linecap="round"/></svg>Dados vão para o Google Sheets</li>
-          <li><svg width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="6.5" r="6" stroke="#c9a84c" stroke-opacity=".6"/><path d="M3.5 6.8L5.2 8.8L9.5 4" stroke="#c9a84c" stroke-width="1.4" stroke-linecap="round"/></svg>Helder avalia e publica</li>
-        </ul>
-        <div class="fcard-btn">Cadastrar Imóvel →</div>
+      <!-- Lado esquerdo: texto e benefícios -->
+      <div class="cad-left">
+        <div class="eyebrow"><div class="eyebrow-line"></div><span class="eyebrow-text">Para Proprietários</span></div>
+        <h2 class="sec-title" style="margin-top:16px;font-size:clamp(28px,3.5vw,46px)">Quer vender ou<br>alugar seu <em>imóvel?</em></h2>
+        <p style="color:rgba(255,255,255,.55);font-size:15px;line-height:1.8;margin-top:16px;max-width:440px">
+          Cadastre seu imóvel com Helder Freire e tenha acesso a uma carteira qualificada de compradores e locatários na região de Passos e Sul de Minas Gerais.
+        </p>
+
+        <div class="cad-steps">
+          <div class="cad-step">
+            <div class="cad-step-num">01</div>
+            <div class="cad-step-body">
+              <div class="cad-step-title">Preencha o formulário</div>
+              <div class="cad-step-desc">Informe os detalhes do imóvel — tipo, valor, localização e características.</div>
+            </div>
+          </div>
+          <div class="cad-step">
+            <div class="cad-step-num">02</div>
+            <div class="cad-step-body">
+              <div class="cad-step-title">Helder avalia e entra em contato</div>
+              <div class="cad-step-desc">Em até 24h o corretor analisa os dados e combina os próximos passos com você.</div>
+            </div>
+          </div>
+          <div class="cad-step">
+            <div class="cad-step-num">03</div>
+            <div class="cad-step-body">
+              <div class="cad-step-title">Imóvel publicado e divulgado</div>
+              <div class="cad-step-desc">Seu imóvel é anunciado para uma base ativa de clientes interessados na região.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="cad-badges">
+          <div class="cad-badge-item">🏡 Casas &amp; Apês</div>
+          <div class="cad-badge-item">🌾 Fazendas</div>
+          <div class="cad-badge-item">📐 Terrenos</div>
+          <div class="cad-badge-item">🏪 Comercial</div>
+          <div class="cad-badge-item">🔑 Aluguel</div>
+        </div>
+      </div>
+
+      <!-- Lado direito: card de ação -->
+      <div class="cad-right">
+        <div class="fcard fcard-large" onclick="openForm('proprietario')">
+          <div class="fcard-icon" style="font-size:40px">🏠</div>
+          <div class="fcard-badge fcard-badge-gold" style="margin-top:12px">Para Proprietários</div>
+          <h3 class="fcard-title" style="font-size:22px;margin-top:16px">Quero Vender ou<br>Alugar meu Imóvel</h3>
+          <p class="fcard-desc" style="margin-top:10px">Cadastre seu imóvel com todos os detalhes. Cada tipo tem campos específicos para uma avaliação precisa.</p>
+          <ul class="fcard-items" style="margin-top:20px">
+            <li><svg width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="6.5" r="6" stroke="#c9a84c" stroke-opacity=".6"/><path d="M3.5 6.8L5.2 8.8L9.5 4" stroke="#c9a84c" stroke-width="1.4" stroke-linecap="round"/></svg>Casa, Apê, Fazenda, Terreno...</li>
+            <li><svg width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="6.5" r="6" stroke="#c9a84c" stroke-opacity=".6"/><path d="M3.5 6.8L5.2 8.8L9.5 4" stroke="#c9a84c" stroke-width="1.4" stroke-linecap="round"/></svg>Dados registrados com segurança</li>
+            <li><svg width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="6.5" r="6" stroke="#c9a84c" stroke-opacity=".6"/><path d="M3.5 6.8L5.2 8.8L9.5 4" stroke="#c9a84c" stroke-width="1.4" stroke-linecap="round"/></svg>Helder avalia e publica</li>
+            <li><svg width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="6.5" r="6" stroke="#c9a84c" stroke-opacity=".6"/><path d="M3.5 6.8L5.2 8.8L9.5 4" stroke="#c9a84c" stroke-width="1.4" stroke-linecap="round"/></svg>Atendimento em até 24h</li>
+            <li><svg width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="6.5" r="6" stroke="#c9a84c" stroke-opacity=".6"/><path d="M3.5 6.8L5.2 8.8L9.5 4" stroke="#c9a84c" stroke-width="1.4" stroke-linecap="round"/></svg>100% gratuito para proprietários</li>
+          </ul>
+          <div class="fcard-btn" style="margin-top:28px;padding:14px 0;font-size:13px">Cadastrar Imóvel →</div>
+          <p style="text-align:center;font-size:11px;color:rgba(255,255,255,.35);margin-top:12px">Sem compromisso. Helder entra em contato.</p>
+        </div>
       </div>
 
     </div>
   </div>
 </section>
+
+<style>
+.cad-split {
+  display: grid;
+  grid-template-columns: 1fr 420px;
+  gap: 72px;
+  align-items: center;
+}
+.cad-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  margin-top: 36px;
+}
+.cad-step {
+  display: flex;
+  gap: 18px;
+  align-items: flex-start;
+}
+.cad-step-num {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(201,168,76,.15);
+  border: 1px solid rgba(201,168,76,.4);
+  color: #c9a84c;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .05em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.cad-step-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: rgba(255,255,255,.9);
+  margin-bottom: 4px;
+}
+.cad-step-desc {
+  font-size: 13px;
+  color: rgba(255,255,255,.45);
+  line-height: 1.6;
+}
+.cad-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 32px;
+}
+.cad-badge-item {
+  padding: 6px 14px;
+  border-radius: 20px;
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.1);
+  font-size: 12px;
+  color: rgba(255,255,255,.6);
+}
+.fcard-large {
+  cursor: pointer;
+  transition: transform .2s, box-shadow .2s;
+}
+.fcard-large:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 60px rgba(0,0,0,.3);
+}
+@media (max-width: 900px) {
+  .cad-split {
+    grid-template-columns: 1fr;
+    gap: 40px;
+  }
+  .cad-right { order: -1; }
+}
+</style>
 
 <!-- ══ CONTATO ══ -->
 <section class="section section-dark" id="contato">
