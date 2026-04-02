@@ -8,33 +8,39 @@
 // ═══════════════════════════════════════════════════
 import { autenticado, json, naoAutorizado } from '../_auth.js';
 
-// ── GET — Listagem pública ─────────────────────────
+// ── GET — Listagem pública ─────────────────────────────────────────
 export async function onRequestGet({ request, env }) {
-  const url = new URL(request.url);
-  const tipo = url.searchParams.get('tipo');   // filtro opcional
+  const url  = new URL(request.url);
+  const tipo = url.searchParams.get('tipo');
   const id   = url.searchParams.get('id');
+  const all  = url.searchParams.get('all') === '1';
 
   try {
     if (id) {
-      // Busca imóvel específico
       const imovel = await ( env.DB || env.helder_freire_imoveis ).prepare(
-        `SELECT * FROM imoveis WHERE id = ? AND status = 'ativo'`
+        'SELECT * FROM imoveis WHERE id = ?'
       ).bind(id).first();
-      return imovel
-        ? json(imovel)
-        : json({ erro: 'Imóvel não encontrado' }, 404);
+      return imovel ? json(imovel) : json({ erro: 'Imóvel não encontrado' }, 404);
     }
 
-    // Lista todos (com filtro de tipo se fornecido)
-    const query = tipo && tipo !== 'todos'
-      ? `SELECT * FROM imoveis WHERE status = 'ativo' AND tipo = ? ORDER BY id DESC`
-      : `SELECT * FROM imoveis WHERE status = 'ativo' ORDER BY id DESC`;
+    let query, result;
+    if (all) {
+      query = tipo && tipo !== 'todos'
+        ? 'SELECT * FROM imoveis WHERE tipo = ? ORDER BY id DESC'
+        : 'SELECT * FROM imoveis ORDER BY id DESC';
+      result = tipo && tipo !== 'todos'
+        ? await ( env.DB || env.helder_freire_imoveis ).prepare(query).bind(tipo).all()
+        : await ( env.DB || env.helder_freire_imoveis ).prepare(query).all();
+    } else {
+      query = tipo && tipo !== 'todos'
+        ? "SELECT * FROM imoveis WHERE status = 'ativo' AND tipo = ? ORDER BY id DESC"
+        : "SELECT * FROM imoveis WHERE status = 'ativo' ORDER BY id DESC";
+      result = tipo && tipo !== 'todos'
+        ? await ( env.DB || env.helder_freire_imoveis ).prepare(query).bind(tipo).all()
+        : await ( env.DB || env.helder_freire_imoveis ).prepare(query).all();
+    }
 
-    const { results } = tipo && tipo !== 'todos'
-      ? await ( env.DB || env.helder_freire_imoveis ).prepare(query).bind(tipo).all()
-      : await ( env.DB || env.helder_freire_imoveis ).prepare(query).all();
-
-    return json(results);
+    return json(result.results);
   } catch (e) {
     return json({ erro: 'Erro ao buscar imóveis' }, 500);
   }

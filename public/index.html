@@ -49,6 +49,10 @@
 <div id="det-modal" style="display:none;position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,.85);align-items:center;justify-content:center;padding:16px" onclick="if(event.target===this)closeDetModal()">
 </div>
 
+<!-- ══ MODAL IMÓVEL PÚBLICO ══ -->
+<div id="pub-modal" style="display:none;position:fixed;inset:0;z-index:8500;background:rgba(0,0,0,.80);align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(6px)" onclick="if(event.target===this)fecharModalImovel()">
+</div>
+
 <!-- ══ NAV ══ -->
 <nav id="navbar">
   <a href="#" class="nav-logo">
@@ -686,9 +690,9 @@
       <div class="adm-tab" id="tab-leads">
         <div class="adm-table-wrap">
           <table class="adm-table">
-            <thead><tr><th>#</th><th>Nome</th><th>WhatsApp</th><th>E-mail</th><th>Interesse</th><th>Valor Máx.</th><th>Data</th></tr></thead>
+            <thead><tr><th>#</th><th>Nome</th><th>WhatsApp</th><th>E-mail</th><th>Interesse</th><th>Valor Máx.</th><th>Data</th><th></th></tr></thead>
             <tbody id="leads-tbody">
-              <tr><td colspan="7" style="text-align:center;padding:40px;color:var(--textl)">Nenhum lead recebido ainda</td></tr>
+              <tr><td colspan="8" style="text-align:center;padding:40px;color:var(--textl)">Nenhum lead recebido ainda</td></tr>
             </tbody>
           </table>
         </div>

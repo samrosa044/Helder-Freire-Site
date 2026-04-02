@@ -83,3 +83,25 @@ export async function onRequestGet({ request, env }) {
     return json({ erro: 'Erro ao buscar leads' }, 500);
   }
 }
+// ── DELETE — Apagar lead (admin) ──────────────────
+export async function onRequestDelete({ request, env }) {
+  if (!await autenticado(request, env.JWT_SECRET)) return naoAutorizado();
+
+  const DB = env.DB || env.helder_freire_imoveis;
+  if (!DB) return json({ erro: 'Banco não configurado' }, 500);
+
+  try {
+    const url = new URL(request.url);
+    const id  = url.searchParams.get('id');
+    if (!id) return json({ erro: 'ID obrigatório' }, 400);
+
+    const lead = await DB.prepare('SELECT nome FROM leads WHERE id = ?').bind(id).first();
+    await DB.prepare('DELETE FROM leads WHERE id = ?').bind(id).run();
+    await DB.prepare("INSERT INTO auditoria (tipo, mensagem) VALUES ('delete', ?)")
+      .bind(`Lead #${id} excluído — ${lead?.nome || ''}`).run();
+
+    return json({ sucesso: true });
+  } catch (e) {
+    return json({ erro: 'Erro ao excluir: ' + e.message }, 500);
+  }
+}

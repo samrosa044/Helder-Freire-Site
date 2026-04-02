@@ -149,3 +149,25 @@ export async function onRequestPost({ request, env }) {
     return json({ erro: 'Erro ao salvar cadastro: ' + e.message }, 500);
   }
 }
+// ── DELETE — Apagar cadastro (admin) ──────────────
+export async function onRequestDelete({ request, env }) {
+  if (!await autenticado(request, env.JWT_SECRET)) return naoAutorizado();
+
+  const DB = getDB(env);
+  if (!DB) return json({ erro: 'Banco não configurado' }, 500);
+
+  try {
+    const url = new URL(request.url);
+    const id  = url.searchParams.get('id');
+    if (!id) return json({ erro: 'ID obrigatório' }, 400);
+
+    const pend = await DB.prepare('SELECT nome, tipo_imovel FROM pendentes WHERE id = ?').bind(id).first();
+    await DB.prepare('DELETE FROM pendentes WHERE id = ?').bind(id).run();
+    await DB.prepare("INSERT INTO auditoria (tipo, mensagem) VALUES ('delete', ?)")
+      .bind(`Cadastro #${id} excluído — ${pend?.tipo_imovel || ''} de ${pend?.nome || ''}`).run();
+
+    return json({ sucesso: true });
+  } catch (e) {
+    return json({ erro: 'Erro ao excluir: ' + e.message }, 500);
+  }
+}

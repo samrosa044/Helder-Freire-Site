@@ -108,14 +108,20 @@ async function renderCatalogo(filtro = 'todos') {
       return;
     }
 
-    grid.innerHTML = imoveis.map(im => `
-      <div class="pcard">
+    grid.innerHTML = imoveis.map(im => {
+      const _fotos = (im.fotos||'').split(/[\n,]+/).map(u=>u.trim()).filter(u=>u.length>4);
+      const _capa  = _fotos.length
+        ? '<img src="'+_fotos[0]+'" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover" onerror="this.style.display=\'none\'">'
+        : '<div class="pcard-type-icon">'+(TYPE_ICONS[im.tipo]||'🏠')+'</div>';
+      const _json  = JSON.stringify(im).replace(/'/g,"&#39;");
+      const _badge = im.modal==='Locação'?'badge-aluguel':im.destaque==='Sim'?'badge-novo':'badge-venda';
+      const _label = im.modal==='Locação'?'Aluguel':im.destaque==='Sim'?'✓ Destaque':'Venda';
+      return `
+      <div class="pcard" onclick='abrirModalImovel(${_json})' style="cursor:pointer">
         <div class="pcard-img">
           <div class="pcard-img-bg"></div>
-          <div class="pcard-type-icon">${TYPE_ICONS[im.tipo] || '🏠'}</div>
-          <span class="pcard-badge ${im.modal === 'Locação' ? 'badge-aluguel' : im.destaque === 'Sim' ? 'badge-novo' : 'badge-venda'}">
-            ${im.modal === 'Locação' ? 'Aluguel' : im.destaque === 'Sim' ? '✓ Destaque' : 'Venda'}
-          </span>
+          ${_capa}
+          <span class="pcard-badge ${_badge}">${_label}</span>
           <div class="pcard-verified">
             <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><circle cx="5" cy="5" r="4.5" stroke="#38bdf8" stroke-width=".8"/><path d="M2.5 5.2L4 7L7.5 3" stroke="#38bdf8" stroke-width="1" stroke-linecap="round"/></svg>
             Verificado
@@ -135,7 +141,8 @@ async function renderCatalogo(filtro = 'todos') {
             </div>
           </div>
         </div>
-      </div>`).join('');
+      </div>`;
+    }).join('');
   } catch (e) {
     grid.innerHTML = '<div class="empty-state"><div>⚠️</div><div>Erro ao carregar imóveis. Tente recarregar a página.</div></div>';
   }
@@ -351,14 +358,17 @@ async function renderPendentes() {
       if (status === 'pendente') {
         acoes = `
           <button class="act-btn act-approve" onclick="aprovar(${p.id})">✓ Aprovar</button>
-          <button class="act-btn act-reject"  onclick="openReject(${p.id})">✗ Rejeitar</button>`;
+          <button class="act-btn act-reject"  onclick="openReject(${p.id})">✗ Rejeitar</button>
+          <button class="act-btn act-delete"  onclick="delPendente(${p.id})" style="font-size:10px;padding:4px 7px">🗑</button>`;
       } else if (status === 'aprovado') {
         acoes = `<span style="color:var(--green);font-size:12px;font-weight:600">✅ Aprovado</span>
-          <br><button class="act-btn act-reject" style="margin-top:4px;font-size:10px" onclick="openReject(${p.id})">Rejeitar</button>`;
+          <br><button class="act-btn act-reject" style="margin-top:4px;font-size:10px" onclick="openReject(${p.id})">Rejeitar</button>
+          <button class="act-btn act-delete" style="margin-top:4px;font-size:10px;padding:4px 7px" onclick="delPendente(${p.id})">🗑</button>`;
       } else if (status === 'rejeitado') {
         const motivo = p.motivo_rejeicao ? `<br><span style="font-size:10px;color:var(--textl)">Motivo: ${p.motivo_rejeicao}</span>` : '';
         acoes = `<span style="color:var(--red);font-size:12px;font-weight:600">❌ Rejeitado</span>${motivo}
-          <br><button class="act-btn act-approve" style="margin-top:4px;font-size:10px" onclick="aprovar(${p.id})">Aprovar</button>`;
+          <br><button class="act-btn act-approve" style="margin-top:4px;font-size:10px" onclick="aprovar(${p.id})">Aprovar</button>
+          <button class="act-btn act-delete" style="margin-top:4px;font-size:10px;padding:4px 7px" onclick="delPendente(${p.id})">🗑</button>`;
       }
 
       return `
@@ -412,57 +422,491 @@ async function confirmReject() {
 // ─── Imóveis Admin ────────────────────────────────────────────────
 async function renderImoveis(busca = '') {
   const tb = document.getElementById('imoveis-tbody');
-  tb.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:20px">⏳ Carregando...</td></tr>';
+  tb.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:20px">⏳ Carregando...</td></tr>';
 
   try {
-    let lista = await API.get('/imoveis', true);
+    let lista = await API.get('/imoveis?all=1', true);
     if (busca) lista = lista.filter(i =>
       (i.titulo || '').toLowerCase().includes(busca.toLowerCase()) ||
       (i.tipo   || '').toLowerCase().includes(busca.toLowerCase())
     );
 
     if (!lista.length) {
-      tb.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--textl)">Nenhum imóvel cadastrado</td></tr>';
+      tb.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--textl)">Nenhum imóvel cadastrado</td></tr>';
       return;
     }
 
     tb.innerHTML = lista.map(im => {
-      const numId = '#' + String(im.id).padStart(4,'0');
+      const numId  = '#' + String(im.id).padStart(4,'0');
+      const imJson = JSON.stringify(im).replace(/'/g,"&#39;");
       return `
       <tr>
-        <td><button onclick='openDetalhes(${JSON.stringify(im).replace(/'/g,"&#39;")})' style="background:var(--navy);color:var(--gold);border:none;cursor:pointer;font-size:11px;font-weight:700;padding:3px 8px;border-radius:5px;font-family:inherit">${numId}</button></td>
+        <td><button onclick='openDetalhes(${imJson})' style="background:var(--navy);color:var(--gold);border:none;cursor:pointer;font-size:11px;font-weight:700;padding:3px 8px;border-radius:5px;font-family:inherit">${numId}</button></td>
         <td>${TYPE_ICONS[im.tipo] || '🏠'} ${TYPE_LABELS[im.tipo] || im.tipo}</td>
         <td><strong>${im.titulo}</strong></td>
         <td style="color:var(--navy-light);font-weight:600">R$ ${im.valor}</td>
         <td>${im.cidade}</td>
         <td><span class="pill ${im.status === 'ativo' ? 'pill-approved' : 'pill-pending'}">${im.status === 'ativo' ? '✓ Ativo' : 'Inativo'}</span></td>
-        <td style="white-space:nowrap">
-          <button class="act-btn act-edit" onclick="toggleStatus(${im.id}, '${im.status}', '${im.titulo.replace(/'/g, "\\'")}', ${JSON.stringify(im).replace(/</g,'\\u003c')})">
-            ${im.status === 'ativo' ? 'Pausar' : 'Ativar'}
-          </button>
-          <button class="act-btn act-delete" onclick="delImovel(${im.id})">Excluir</button>
+        <td style="white-space:nowrap;display:flex;gap:4px;flex-wrap:wrap">
+          <button class="act-btn act-edit"   onclick='abrirEditarImovel(${imJson})'>✏️ Editar</button>
+          <button class="act-btn act-reject" onclick="delImovel(${im.id})" style="font-size:10px">🗑</button>
         </td>
       </tr>`;
     }).join('');
   } catch (e) {
-    tb.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--red)">Erro ao carregar.</td></tr>';
+    tb.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--red)">Erro ao carregar.</td></tr>';
   }
 }
 
-async function toggleStatus(id, statusAtual, titulo, imData) {
-  const novoStatus = statusAtual === 'ativo' ? 'inativo' : 'ativo';
-  try {
-    await API.put('/imoveis', { ...imData, id, status: novoStatus });
-    await Promise.all([renderImoveis(), renderCatalogo(), updateKPIs()]);
-  } catch (e) { alert('Erro: ' + e.message); }
-}
-
 async function delImovel(id) {
-  if (!confirm('Excluir este imóvel permanentemente?')) return;
+  if (!confirm('Excluir este imóvel permanentemente? Esta ação não pode ser desfeita.')) return;
   try {
     await API.delete('/imoveis?id=' + id);
     await Promise.all([renderImoveis(), renderCatalogo(), updateKPIs()]);
   } catch (e) { alert('Erro: ' + e.message); }
+}
+
+async function delPendente(id) {
+  if (!confirm('Apagar este cadastro permanentemente?')) return;
+  try {
+    await API.delete('/pendentes?id=' + id);
+    await Promise.all([renderPendentes(), updateKPIs()]);
+  } catch (e) { alert('Erro: ' + e.message); }
+}
+
+async function delLead(id) {
+  if (!confirm('Apagar este lead permanentemente?')) return;
+  try {
+    await API.delete('/leads?id=' + id);
+    renderLeads();
+  } catch (e) { alert('Erro: ' + e.message); }
+}
+
+// ─── Modal Editar Imóvel ──────────────────────────────────────────
+function abrirEditarImovel(im) {
+  if (typeof im === 'string') im = JSON.parse(im);
+
+  const TIPOS = ['casa','apartamento','fazenda','terreno','comercial','aluguel'];
+
+  const tiposBtns = TIPOS.map(t => {
+    const sel = im.tipo === t;
+    return `<button type="button" onclick="eiSelecionarTipo(this,'${t}')"
+      style="padding:7px 14px;border-radius:8px;border:2px solid ${sel?'var(--gold)':'#e2e8f0'};
+             background:${sel?'var(--gold)':'#f8fafc'};color:${sel?'#0c2461':'#475569'};
+             font-size:12px;font-weight:${sel?'700':'500'};cursor:pointer;transition:.15s">
+      ${TYPE_ICONS[t]||''} ${TYPE_LABELS[t]||t}
+    </button>`;
+  }).join('');
+
+  // Monta preview de fotos existentes
+  const fotosExist = (im.fotos||'').split(/[\n,]+/).map(u=>u.trim()).filter(u=>u.length>4);
+  const fotosPreviewHtml = fotosExist.length
+    ? fotosExist.map((u,i) => `
+        <div style="position:relative;display:inline-block">
+          <img src="${u}" data-url="${u}" style="height:80px;width:110px;object-fit:cover;border-radius:8px;border:2px solid #e2e8f0" onerror="this.parentNode.style.display='none'">
+          <button onclick="eiRemoverFoto(this)" style="position:absolute;top:-6px;right:-6px;background:#dc2626;color:#fff;border:none;border-radius:50%;width:20px;height:20px;font-size:11px;cursor:pointer;line-height:1">×</button>
+        </div>`).join('')
+    : '';
+
+  document.getElementById('det-modal').innerHTML = `
+    <div class="det-card" style="max-width:800px;width:100%;background:#fff">
+      <div class="det-card-header">
+        <div style="display:flex;align-items:center;gap:10px">
+          <span style="background:var(--gold);color:var(--navy);font-size:13px;font-weight:800;padding:4px 12px;border-radius:6px">#${String(im.id).padStart(4,'0')}</span>
+          <span style="color:rgba(255,255,255,.85);font-size:14px;font-weight:600">✏️ Editar Imóvel</span>
+        </div>
+        <button onclick="closeDetModal()" style="background:none;border:none;color:rgba(255,255,255,.6);font-size:24px;cursor:pointer;line-height:1">×</button>
+      </div>
+
+      <div style="overflow-y:auto;max-height:72vh;padding:24px 28px">
+        <input type="hidden" id="ei-id" value="${im.id}">
+        <input type="hidden" id="ei-tipo" value="${im.tipo||'casa'}">
+
+        <!-- TIPO -->
+        <div style="margin-bottom:20px">
+          <div style="font-size:10px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">Tipo do Imóvel</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap" id="ei-tipos-grid">${tiposBtns}</div>
+        </div>
+
+        <!-- CAMPOS PRINCIPAIS -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
+          <div style="grid-column:1/-1">
+            <label style="font-size:11px;font-weight:600;color:#64748b;display:block;margin-bottom:5px">Título do Anúncio *</label>
+            <input id="ei-titulo" value="${(im.titulo||'').replace(/"/g,'&quot;')}" style="width:100%;padding:10px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;box-sizing:border-box">
+          </div>
+          <div>
+            <label style="font-size:11px;font-weight:600;color:#64748b;display:block;margin-bottom:5px">Endereço / Localização *</label>
+            <input id="ei-endereco" value="${(im.endereco||'').replace(/"/g,'&quot;')}" style="width:100%;padding:10px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;box-sizing:border-box">
+          </div>
+          <div>
+            <label style="font-size:11px;font-weight:600;color:#64748b;display:block;margin-bottom:5px">Cidade</label>
+            <input id="ei-cidade" value="${(im.cidade||'Passos').replace(/"/g,'&quot;')}" style="width:100%;padding:10px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;box-sizing:border-box">
+          </div>
+          <div>
+            <label style="font-size:11px;font-weight:600;color:#64748b;display:block;margin-bottom:5px">Valor (R$) *</label>
+            <input id="ei-valor" value="${(im.valor||'').replace(/"/g,'&quot;')}" style="width:100%;padding:10px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;box-sizing:border-box">
+          </div>
+          <div>
+            <label style="font-size:11px;font-weight:600;color:#64748b;display:block;margin-bottom:5px">Área (m² ou ha)</label>
+            <input id="ei-area" value="${(im.area||'').replace(/"/g,'&quot;')}" placeholder="Ex: 120 m²" style="width:100%;padding:10px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;box-sizing:border-box">
+          </div>
+          <div>
+            <label style="font-size:11px;font-weight:600;color:#64748b;display:block;margin-bottom:5px">Quartos</label>
+            <select id="ei-quartos" style="width:100%;padding:10px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;box-sizing:border-box">
+              ${['-','1','2','3','4','5+'].map(v=>`<option${im.quartos===v?' selected':''}>${v}</option>`).join('')}
+            </select>
+          </div>
+          <div>
+            <label style="font-size:11px;font-weight:600;color:#64748b;display:block;margin-bottom:5px">Vagas</label>
+            <select id="ei-vagas" style="width:100%;padding:10px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;box-sizing:border-box">
+              ${['-','0','1','2','3','4+'].map(v=>`<option${im.vagas===v?' selected':''}>${v}</option>`).join('')}
+            </select>
+          </div>
+          <div>
+            <label style="font-size:11px;font-weight:600;color:#64748b;display:block;margin-bottom:5px">Modalidade</label>
+            <select id="ei-modal" style="width:100%;padding:10px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;box-sizing:border-box">
+              ${['Venda','Locação','Arrendamento','Venda e Locação'].map(v=>`<option${im.modal===v?' selected':''}>${v}</option>`).join('')}
+            </select>
+          </div>
+          <div>
+            <label style="font-size:11px;font-weight:600;color:#64748b;display:block;margin-bottom:5px">Status</label>
+            <select id="ei-status" style="width:100%;padding:10px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;box-sizing:border-box">
+              <option${im.status==='ativo'?' selected':''}>ativo</option>
+              <option${im.status==='inativo'?' selected':''}>inativo</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size:11px;font-weight:600;color:#64748b;display:block;margin-bottom:5px">Destaque na Home?</label>
+            <select id="ei-destaque" style="width:100%;padding:10px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;box-sizing:border-box">
+              <option${im.destaque==='Não'?' selected':''}>Não</option>
+              <option${im.destaque==='Sim'?' selected':''}>Sim</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- DESCRIÇÃO -->
+        <div style="margin-bottom:20px">
+          <label style="font-size:11px;font-weight:600;color:#64748b;display:block;margin-bottom:5px">Descrição Completa</label>
+          <textarea id="ei-descricao" rows="4" style="width:100%;padding:10px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;box-sizing:border-box;resize:vertical;font-family:inherit">${im.descricao||''}</textarea>
+        </div>
+
+        <!-- FOTOS -->
+        <div style="border:2px dashed #e2e8f0;border-radius:10px;padding:18px">
+          <div style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px">📸 Fotos do Imóvel</div>
+
+          <!-- Upload de arquivo -->
+          <div style="margin-bottom:14px">
+            <label style="display:flex;align-items:center;gap:10px;background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:8px;padding:10px 14px;cursor:pointer;font-size:13px;color:#475569">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              Selecionar fotos do computador
+              <input type="file" id="ei-file-input" accept="image/*" multiple onchange="eiAdicionarFotosArquivo(this)" style="display:none">
+            </label>
+            <div style="font-size:10px;color:#94a3b8;margin-top:5px">JPG, PNG, WEBP — múltiplas fotos permitidas. As imagens serão salvas no banco de dados.</div>
+          </div>
+
+          <!-- Fotos atuais -->
+          <div id="ei-fotos-grid" style="display:flex;gap:10px;flex-wrap:wrap;min-height:40px">
+            ${fotosPreviewHtml || '<span style="font-size:12px;color:#94a3b8">Nenhuma foto ainda</span>'}
+          </div>
+
+          <!-- Campo oculto com os dados das fotos -->
+          <input type="hidden" id="ei-fotos" value="${(im.fotos||'').replace(/"/g,'&quot;')}">
+        </div>
+      </div>
+
+      <div class="det-card-footer" style="background:#f8fafc">
+        <button onclick="salvarEdicaoImovel()" style="background:var(--gold);color:var(--navy);border:none;padding:11px 28px;border-radius:8px;font-weight:700;font-size:13px;cursor:pointer">✓ Salvar Alterações</button>
+        <button class="adm-btn adm-btn-ghost" onclick="closeDetModal()">Cancelar</button>
+      </div>
+    </div>`;
+
+  document.getElementById('det-modal').style.display = 'flex';
+}
+
+function eiSelecionarTipo(btn, tipo) {
+  document.getElementById('ei-tipo').value = tipo;
+  document.querySelectorAll('#ei-tipos-grid button').forEach(b => {
+    b.style.background = '#f8fafc';
+    b.style.color = '#475569';
+    b.style.borderColor = '#e2e8f0';
+    b.style.fontWeight = '500';
+  });
+  btn.style.background = 'var(--gold)';
+  btn.style.color = '#0c2461';
+  btn.style.borderColor = 'var(--gold)';
+  btn.style.fontWeight = '700';
+}
+
+function eiRemoverFoto(btn) {
+  const wrap = btn.parentNode;
+  const url  = wrap.querySelector('img').dataset.url;
+  wrap.remove();
+  // Atualiza lista de fotos removendo esta entrada
+  const input = document.getElementById('ei-fotos');
+  try {
+    const lista = JSON.parse(input.dataset.lista||'[]');
+    input.dataset.lista = JSON.stringify(lista.filter(u=>u!==url));
+    // reconstroi o value para envio (apenas URLs http para salvar no banco)
+    input.value = lista.filter(u=>u!==url && (u.startsWith('http')||u.startsWith('data:'))).join('\n');
+  } catch {
+    const novas = input.value.split(/[\n,]+/).map(u=>u.trim()).filter(u=>u && u!==url);
+    input.value = novas.join('\n');
+  }
+  if (!document.querySelector('#ei-fotos-grid img')) {
+    document.getElementById('ei-fotos-grid').innerHTML = '<span style="font-size:12px;color:#94a3b8">Nenhuma foto</span>';
+  }
+}
+
+async function eiAdicionarFotosArquivo(input) {
+  const grid = document.getElementById('ei-fotos-grid');
+  const hiddenInput = document.getElementById('ei-fotos');
+  const semFoto = grid.querySelector('span');
+  if (semFoto) semFoto.remove();
+
+  const files = Array.from(input.files);
+  for (const file of files) {
+    const b64 = await new Promise(res => {
+      const r = new FileReader();
+      r.onload = e => res(e.target.result);
+      r.readAsDataURL(file);
+    });
+
+    // Adiciona preview
+    const wrap = document.createElement('div');
+    wrap.style.cssText = 'position:relative;display:inline-block';
+    wrap.innerHTML = `
+      <img src="${b64}" data-url="${b64}" style="height:80px;width:110px;object-fit:cover;border-radius:8px;border:2px solid #e2e8f0">
+      <button onclick="eiRemoverFoto(this)" style="position:absolute;top:-6px;right:-6px;background:#dc2626;color:#fff;border:none;border-radius:50%;width:20px;height:20px;font-size:11px;cursor:pointer;line-height:1">×</button>`;
+    grid.appendChild(wrap);
+
+    // Adiciona ao campo hidden
+    const atual = hiddenInput.value.trim();
+    hiddenInput.value = atual ? atual + '\n' + b64 : b64;
+  }
+  input.value = ''; // reset input para permitir re-selecionar
+}
+
+  document.getElementById('det-modal').innerHTML = `
+    <div class="det-card" style="max-width:780px;width:100%">
+      <div class="det-card-header">
+        <div style="display:flex;align-items:center;gap:10px">
+          <span style="background:var(--gold);color:var(--navy);font-size:13px;font-weight:800;padding:4px 12px;border-radius:6px">#${String(im.id).padStart(4,'0')}</span>
+          <span style="color:rgba(255,255,255,.85);font-size:14px;font-weight:600">✏️ Editar Imóvel</span>
+        </div>
+        <button onclick="closeDetModal()" style="background:none;border:none;color:rgba(255,255,255,.6);font-size:22px;cursor:pointer">×</button>
+      </div>
+      <div style="overflow-y:auto;max-height:70vh;padding:24px">
+        <input type="hidden" id="ei-id" value="${im.id}">
+
+        <div style="margin-bottom:18px">
+          <div style="font-size:10px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Tipo do Imóvel</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">${tiposBtns}</div>
+          <input type="hidden" id="ei-tipo" value="${im.tipo||'casa'}">
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
+          <div style="grid-column:1/-1">
+            <label style="font-size:11px;font-weight:600;color:#64748b;display:block;margin-bottom:4px">Título do Anúncio *</label>
+            <input id="ei-titulo" value="${(im.titulo||'').replace(/"/g,'&quot;')}" style="width:100%;padding:9px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;box-sizing:border-box">
+          </div>
+          <div>
+            <label style="font-size:11px;font-weight:600;color:#64748b;display:block;margin-bottom:4px">Endereço / Localização *</label>
+            <input id="ei-endereco" value="${(im.endereco||'').replace(/"/g,'&quot;')}" style="width:100%;padding:9px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;box-sizing:border-box">
+          </div>
+          <div>
+            <label style="font-size:11px;font-weight:600;color:#64748b;display:block;margin-bottom:4px">Cidade</label>
+            <input id="ei-cidade" value="${(im.cidade||'Passos').replace(/"/g,'&quot;')}" style="width:100%;padding:9px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;box-sizing:border-box">
+          </div>
+          <div>
+            <label style="font-size:11px;font-weight:600;color:#64748b;display:block;margin-bottom:4px">Valor (R$) *</label>
+            <input id="ei-valor" value="${(im.valor||'').replace(/"/g,'&quot;')}" style="width:100%;padding:9px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;box-sizing:border-box">
+          </div>
+          <div>
+            <label style="font-size:11px;font-weight:600;color:#64748b;display:block;margin-bottom:4px">Área</label>
+            <input id="ei-area" value="${(im.area||'').replace(/"/g,'&quot;')}" placeholder="Ex: 120 m²" style="width:100%;padding:9px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;box-sizing:border-box">
+          </div>
+          <div>
+            <label style="font-size:11px;font-weight:600;color:#64748b;display:block;margin-bottom:4px">Quartos</label>
+            <select id="ei-quartos" style="width:100%;padding:9px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;box-sizing:border-box">
+              ${['-','1','2','3','4','5+'].map(v=>`<option${im.quartos===v?' selected':''}>${v}</option>`).join('')}
+            </select>
+          </div>
+          <div>
+            <label style="font-size:11px;font-weight:600;color:#64748b;display:block;margin-bottom:4px">Vagas</label>
+            <select id="ei-vagas" style="width:100%;padding:9px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;box-sizing:border-box">
+              ${['-','0','1','2','3','4+'].map(v=>`<option${im.vagas===v?' selected':''}>${v}</option>`).join('')}
+            </select>
+          </div>
+          <div>
+            <label style="font-size:11px;font-weight:600;color:#64748b;display:block;margin-bottom:4px">Modalidade</label>
+            <select id="ei-modal" style="width:100%;padding:9px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;box-sizing:border-box">
+              ${['Venda','Locação','Arrendamento','Venda e Locação'].map(v=>`<option${im.modal===v?' selected':''}>${v}</option>`).join('')}
+            </select>
+          </div>
+          <div>
+            <label style="font-size:11px;font-weight:600;color:#64748b;display:block;margin-bottom:4px">Status</label>
+            <select id="ei-status" style="width:100%;padding:9px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;box-sizing:border-box">
+              <option${im.status==='ativo'?' selected':''}>ativo</option>
+              <option${im.status==='inativo'?' selected':''}>inativo</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size:11px;font-weight:600;color:#64748b;display:block;margin-bottom:4px">Destaque na Home?</label>
+            <select id="ei-destaque" style="width:100%;padding:9px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;box-sizing:border-box">
+              <option${im.destaque==='Não'?' selected':''}>Não</option>
+              <option${im.destaque==='Sim'?' selected':''}>Sim</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="margin-bottom:14px">
+          <label style="font-size:11px;font-weight:600;color:#64748b;display:block;margin-bottom:4px">Descrição Completa</label>
+          <textarea id="ei-descricao" rows="4" style="width:100%;padding:9px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;box-sizing:border-box;resize:vertical;font-family:inherit">${im.descricao||''}</textarea>
+        </div>
+
+        <div>
+          <label style="font-size:11px;font-weight:600;color:#64748b;display:block;margin-bottom:4px">
+            📸 Fotos — cole links diretos de imagens separados por vírgula ou quebra de linha
+          </label>
+          <div style="font-size:10px;color:#94a3b8;margin-bottom:6px">Formatos aceitos: links diretos (.jpg/.png) do Drive, Dropbox ou qualquer URL pública de imagem</div>
+          <textarea id="ei-fotos" rows="3" placeholder="https://exemplo.com/foto1.jpg&#10;https://exemplo.com/foto2.jpg" style="width:100%;padding:9px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:12px;box-sizing:border-box;resize:vertical;font-family:monospace">${im.fotos||''}</textarea>
+          <div id="ei-foto-preview" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px"></div>
+          <button type="button" onclick="previewFotos()" style="margin-top:6px;padding:5px 12px;font-size:11px;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:6px;cursor:pointer">🔍 Pré-visualizar fotos</button>
+        </div>
+      </div>
+      <div class="det-card-footer">
+        <button class="act-btn act-approve" onclick="salvarEdicaoImovel()" style="padding:10px 24px;font-size:13px">✓ Salvar Alterações</button>
+        <button class="adm-btn adm-btn-ghost" onclick="closeDetModal()">Cancelar</button>
+      </div>
+    </div>`;
+  document.getElementById('det-modal').style.display = 'flex';
+}
+
+async function salvarEdicaoImovel() {
+  const id    = document.getElementById('ei-id').value;
+  const titulo   = document.getElementById('ei-titulo').value.trim();
+  const endereco = document.getElementById('ei-endereco').value.trim();
+  const valor    = document.getElementById('ei-valor').value.trim();
+  if (!titulo || !endereco || !valor) { alert('Preencha Título, Endereço e Valor'); return; }
+
+  const btn = document.querySelector('#det-modal .act-approve');
+  btn.textContent = '⏳ Salvando...'; btn.disabled = true;
+
+  try {
+    await API.put('/imoveis', {
+      id:       +id,
+      tipo:     document.getElementById('ei-tipo').value,
+      titulo, endereco,
+      cidade:   document.getElementById('ei-cidade').value   || 'Passos',
+      valor,
+      area:     document.getElementById('ei-area').value     || '',
+      quartos:  document.getElementById('ei-quartos').value  || '-',
+      vagas:    document.getElementById('ei-vagas').value    || '-',
+      modal:    document.getElementById('ei-modal').value    || 'Venda',
+      descricao:document.getElementById('ei-descricao').value|| '',
+      fotos:    document.getElementById('ei-fotos').value    || '',
+      status:   document.getElementById('ei-status').value   || 'ativo',
+      destaque: document.getElementById('ei-destaque').value || 'Não',
+    }, true);
+    closeDetModal();
+    await Promise.all([renderImoveis(), renderCatalogo(), updateKPIs()]);
+  } catch (e) {
+    alert('Erro ao salvar: ' + e.message);
+    btn.textContent = '✓ Salvar Alterações'; btn.disabled = false;
+  }
+}
+
+// ─── Modal Público do Imóvel (página inicial) ─────────────────────
+function abrirModalImovel(im) {
+  if (typeof im === 'string') im = JSON.parse(im);
+
+  // Processa fotos: aceita URLs separadas por vírgula/quebra de linha ou link único do Drive
+  const rawFotos = im.fotos || '';
+  const fotosArr = rawFotos.split(/[\n,]+/).map(u => u.trim()).filter(u => u.startsWith('http') || u.startsWith('data:'));
+  let fotoIdx = 0;
+
+  const galeriaHTML = fotosArr.length
+    ? `<div id="pub-gallery" style="position:relative;background:#0a1628;border-radius:12px 12px 0 0;overflow:hidden;height:260px;flex-shrink:0">
+        <img id="pub-foto-main" src="${fotosArr[0]}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'">
+        ${fotosArr.length > 1 ? `
+        <button onclick="pubFotoNav(-1)" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);background:rgba(0,0,0,.6);color:#fff;border:none;border-radius:50%;width:34px;height:34px;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center">‹</button>
+        <button onclick="pubFotoNav(1)"  style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:rgba(0,0,0,.6);color:#fff;border:none;border-radius:50%;width:34px;height:34px;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center">›</button>
+        <div id="pub-foto-counter" style="position:absolute;bottom:10px;right:14px;background:rgba(0,0,0,.55);color:#fff;font-size:11px;padding:3px 9px;border-radius:10px">1 / ${fotosArr.length}</div>
+        <div style="position:absolute;bottom:10px;left:50%;transform:translateX(-50%);display:flex;gap:5px">
+          ${fotosArr.map((_,i) => `<div class="pub-dot${i===0?' pub-dot-on':''}" style="width:6px;height:6px;border-radius:50%;background:${i===0?'#fff':'rgba(255,255,255,.4)'};transition:.2s" onclick="pubFotoGo(${i})"></div>`).join('')}
+        </div>` : ''}
+      </div>`
+    : `<div style="height:180px;background:linear-gradient(135deg,#0c2461,#1a3a7a);border-radius:12px 12px 0 0;display:flex;align-items:center;justify-content:center;font-size:64px;flex-shrink:0">${TYPE_ICONS[im.tipo]||'🏠'}</div>`;
+
+  const badge = im.modal === 'Locação' ? 'Aluguel' : im.destaque === 'Sim' ? '✦ Destaque' : 'Venda';
+  const badgeColor = im.modal === 'Locação' ? '#38bdf8' : im.destaque === 'Sim' ? '#c9a84c' : '#22c55e';
+
+  const specs = [
+    im.quartos && im.quartos !== '-' ? `<div style="text-align:center"><div style="font-size:20px">🛏</div><div style="font-size:11px;color:#94a3b8;margin-top:2px">${im.quartos} quarto${im.quartos!=='1'?'s':''}</div></div>` : '',
+    im.vagas   && im.vagas   !== '-' ? `<div style="text-align:center"><div style="font-size:20px">🚗</div><div style="font-size:11px;color:#94a3b8;margin-top:2px">${im.vagas} vaga${im.vagas!=='1'?'s':''}</div></div>` : '',
+    im.area                          ? `<div style="text-align:center"><div style="font-size:20px">📐</div><div style="font-size:11px;color:#94a3b8;margin-top:2px">${im.area}</div></div>` : '',
+    im.modal                         ? `<div style="text-align:center"><div style="font-size:20px">📋</div><div style="font-size:11px;color:#94a3b8;margin-top:2px">${im.modal}</div></div>` : '',
+  ].filter(Boolean).join('');
+
+  const waNum = 'qr/XGTDJPC5WY2QM1'; // link do WhatsApp do corretor
+  const waMsg = encodeURIComponent('Olá, Helder! Tenho interesse no imóvel: '+im.titulo+' — R$ '+im.valor+'. Pode me passar mais informações?');
+
+  document.getElementById('pub-modal').innerHTML = `
+    <div style="background:#fff;border-radius:14px;width:100%;max-width:580px;max-height:92vh;overflow-y:auto;display:flex;flex-direction:column;box-shadow:0 24px 80px rgba(0,0,0,.4)" onclick="event.stopPropagation()">
+      ${galeriaHTML}
+      <div style="padding:22px 24px 24px">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:6px">
+          <div>
+            <div style="font-size:10px;font-weight:700;color:${badgeColor};letter-spacing:2px;text-transform:uppercase;margin-bottom:4px">${badge} · ${TYPE_LABELS[im.tipo]||im.tipo}</div>
+            <div style="font-family:'Cormorant Garamond',serif;font-size:22px;color:#0c2461;font-weight:700;line-height:1.2">${im.titulo}</div>
+          </div>
+          <button onclick="fecharModalImovel()" style="background:none;border:none;font-size:22px;cursor:pointer;color:#94a3b8;flex-shrink:0;padding:0;line-height:1">×</button>
+        </div>
+
+        <div style="font-size:12px;color:#64748b;margin-bottom:16px">📍 ${im.endereco ? im.endereco + (im.cidade ? ', ' + im.cidade : '') : im.cidade || '-'}</div>
+
+        <div style="font-family:'Cormorant Garamond',serif;font-size:28px;color:#1a3a7a;font-weight:700;margin-bottom:16px">R$ ${im.valor}</div>
+
+        ${specs ? `<div style="display:flex;gap:20px;flex-wrap:wrap;padding:14px 0;border-top:1px solid #f1f5f9;border-bottom:1px solid #f1f5f9;margin-bottom:16px">${specs}</div>` : ''}
+
+        ${im.descricao ? `<div style="margin-bottom:20px"><div style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Descrição</div><div style="font-size:13px;color:#334155;line-height:1.7">${im.descricao}</div></div>` : ''}
+
+        <a href="https://wa.me/${waNum}?text=${waMsg}" target="_blank"
+           style="display:flex;align-items:center;justify-content:center;gap:10px;background:#22c55e;color:#fff;padding:14px 24px;border-radius:10px;font-weight:700;font-size:14px;text-decoration:none;transition:.2s">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+          Falar com Helder Freire
+        </a>
+      </div>
+    </div>`;
+
+  // Guarda fotos no escopo do modal para navegação
+  window._pubFotos = fotosArr;
+  window._pubFotoIdx = 0;
+  document.getElementById('pub-modal').style.display = 'flex';
+}
+
+function pubFotoNav(dir) {
+  const fotos = window._pubFotos || [];
+  if (!fotos.length) return;
+  window._pubFotoIdx = (window._pubFotoIdx + dir + fotos.length) % fotos.length;
+  pubFotoGo(window._pubFotoIdx);
+}
+
+function pubFotoGo(idx) {
+  const fotos = window._pubFotos || [];
+  if (!fotos[idx]) return;
+  window._pubFotoIdx = idx;
+  const img = document.getElementById('pub-foto-main');
+  if (img) img.src = fotos[idx];
+  const counter = document.getElementById('pub-foto-counter');
+  if (counter) counter.textContent = `${idx + 1} / ${fotos.length}`;
+  document.querySelectorAll('.pub-dot').forEach((d, i) => {
+    d.style.background = i === idx ? '#fff' : 'rgba(255,255,255,.4)';
+  });
+}
+
+function fecharModalImovel() {
+  document.getElementById('pub-modal').style.display = 'none';
 }
 
 // ─── Cadastrar Imóvel (Admin) ─────────────────────────────────────
@@ -470,8 +914,18 @@ let admCurrentType = 'casa';
 
 function selectAdmType(tipo, btn) {
   admCurrentType = tipo;
-  document.querySelectorAll('#tab-cadastrar .fchip').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('#tab-cadastrar .fchip').forEach(b => {
+    b.classList.remove('active');
+    b.style.background = 'var(--g100)';
+    b.style.color = 'var(--text)';
+    b.style.borderColor = 'var(--g200)';
+    b.style.fontWeight = '';
+  });
   btn.classList.add('active');
+  btn.style.background = 'var(--gold)';
+  btn.style.color = 'var(--navy)';
+  btn.style.borderColor = 'var(--gold)';
+  btn.style.fontWeight = '700';
   document.getElementById('adm-type').value = tipo;
 }
 
@@ -541,6 +995,7 @@ async function renderLeads() {
         <td>${TYPE_ICONS[l.tipo_imovel] || '🏠'} ${TYPE_LABELS[l.tipo_imovel] || l.tipo_imovel || '-'}</td>
         <td>${l.valor_maximo || '-'}</td>
         <td style="white-space:nowrap">${new Date(l.criado_em).toLocaleDateString('pt-BR')}</td>
+        <td><button class="act-btn act-delete" onclick="delLead(${l.id})" style="font-size:10px;padding:4px 8px">🗑 Apagar</button></td>
       </tr>`;
     }).join('');
   } catch (e) {
