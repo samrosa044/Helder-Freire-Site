@@ -1,0 +1,284 @@
+ADMIN PANEL
+     ══════════════ -->
+<div class="admin-panel" id="adminPanel">
+  <div class="adm-side">
+    <div class="adm-side-logo">
+      <div style="width:32px;height:32px;border:1.5px solid var(--gold);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7.5L5.5 10.5L11 4" stroke="#c9a84c" stroke-width="1.8" stroke-linecap="round"/></svg>
+      </div>
+      <div><div class="adm-logo-name">Helder Freire</div><div class="adm-logo-sub">Admin</div></div>
+    </div>
+    <div class="adm-nav">
+      <div class="adm-group">Principal</div>
+      <div class="adm-item active" onclick="showAdmTab('dashboard',this)">📊 Dashboard</div>
+      <div class="adm-item" onclick="showAdmTab('pendentes',this)">⏳ Pendentes <span class="adm-badge" id="badge-pendentes">0</span></div>
+      <div class="adm-item" onclick="showAdmTab('imoveis',this)">🏘️ Imóveis Ativos</div>
+      <div class="adm-group">Gestão</div>
+      <div class="adm-item" onclick="showAdmTab('cadastrar',this)">➕ Cadastrar Imóvel</div>
+      <div class="adm-item" onclick="showAdmTab('leads',this)">📋 Leads / Contatos</div>
+      <div class="adm-item" onclick="showAdmTab('auditoria',this)">🔍 Auditoria</div>
+      <div class="adm-group">Configurações</div>
+      <div class="adm-item" onclick="showAdmTab('config',this)">⚙️ Configurações</div>
+    </div>
+    <div class="adm-bottom">
+      <button class="adm-logout" onclick="admLogout()">↩ Sair do Painel</button>
+    </div>
+  </div>
+  <div class="adm-main">
+    <div class="adm-topbar">
+      <div class="adm-page-title" id="admTitle">Dashboard</div>
+      <button class="adm-close-site-btn" onclick="closeAdmin()">← Ver Site</button>
+    </div>
+    <div class="adm-content">
+
+      <!-- TAB: DASHBOARD -->
+      <div class="adm-tab active" id="tab-dashboard">
+        <div class="kpis" id="dash-kpis">
+          <div class="kpi"><div class="kpi-lbl">Imóveis Ativos</div><div class="kpi-val" id="kpi-ativos">0</div><div class="kpi-delta">No portfólio</div></div>
+          <div class="kpi"><div class="kpi-lbl">Pendentes</div><div class="kpi-val" id="kpi-pend">0</div><div class="kpi-delta warn">Aguardando revisão</div></div>
+          <div class="kpi"><div class="kpi-lbl">Leads</div><div class="kpi-val" id="kpi-leads">0</div><div class="kpi-delta">Total recebidos</div></div>
+          <div class="kpi"><div class="kpi-lbl">Rejeitados</div><div class="kpi-val" id="kpi-rej">0</div><div class="kpi-delta danger">Necessitam ação</div></div>
+        </div>
+        <div class="adm-table-wrap">
+          <div style="padding:16px 18px;font-size:12px;font-weight:700;color:var(--text);border-bottom:1px solid var(--g200)">Atividade Recente</div>
+          <div id="audit-recent" style="padding:0 18px"></div>
+        </div>
+      </div>
+
+      <!-- TAB: PENDENTES (AUDITORIA) -->
+      <div class="adm-tab" id="tab-pendentes">
+        <div style="margin-bottom:16px;font-size:13px;color:var(--textl)">Cadastros recebidos pelo formulário público. Aprove para publicar o imóvel ou rejeite com um motivo.</div>
+
+        <!-- Abas de status -->
+        <div class="pend-status-tabs" id="pendStatusTabs">
+          <button class="pend-stab active" data-status="pendente" onclick="setPendStatus('pendente',this)">⏳ Pendentes <span class="pend-stab-count" id="cnt-pendente"></span></button>
+          <button class="pend-stab" data-status="aprovado" onclick="setPendStatus('aprovado',this)">✅ Aprovados <span class="pend-stab-count" id="cnt-aprovado"></span></button>
+          <button class="pend-stab" data-status="rejeitado" onclick="setPendStatus('rejeitado',this)">❌ Rejeitados <span class="pend-stab-count" id="cnt-rejeitado"></span></button>
+        </div>
+
+        <div class="adm-filter-bar" style="margin-top:12px">
+          <input class="adm-search" type="text" id="pend-search" placeholder="Buscar por nome, tipo, proprietário..." oninput="renderPendentes()">
+          <select class="adm-select" id="pend-tipo" onchange="renderPendentes()"><option value="">Todos os tipos</option><option>casa</option><option>apartamento</option><option>fazenda</option><option>terreno</option><option>comercial</option><option>aluguel</option></select>
+        </div>
+        <div class="adm-table-wrap">
+          <table class="adm-table">
+            <thead><tr><th>#</th><th>Tipo</th><th>Nome</th><th>WhatsApp</th><th>Local</th><th>Valor</th><th>Data</th><th>Ações</th></tr></thead>
+            <tbody id="pendentes-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- TAB: IMÓVEIS ATIVOS -->
+      <div class="adm-tab" id="tab-imoveis">
+        <div class="adm-filter-bar">
+          <input class="adm-search" type="text" placeholder="Buscar imóvel..." oninput="renderImoveis(this.value)">
+          <select class="adm-select" onchange="renderImoveis()"><option value="">Todos os tipos</option><option>casa</option><option>apartamento</option><option>fazenda</option><option>terreno</option><option>comercial</option><option>aluguel</option></select>
+          <button class="adm-btn adm-btn-gold" onclick="showAdmTab('cadastrar',null)">+ Novo Imóvel</button>
+        </div>
+        <div class="adm-table-wrap">
+          <table class="adm-table">
+            <thead><tr><th>#</th><th>Tipo</th><th>Nome/Endereço</th><th>Valor</th><th>Cidade</th><th>Status</th><th>Ações</th></tr></thead>
+            <tbody id="imoveis-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- TAB: CADASTRAR IMÓVEL (ADMIN) -->
+      <div class="adm-tab" id="tab-cadastrar">
+        <div class="adm-form-card">
+          <div class="adm-form-title">Cadastrar Novo Imóvel</div>
+          <!-- tipo selector admin -->
+          <div style="margin-bottom:20px">
+            <div style="font-size:10px;font-weight:700;color:var(--textl);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">Tipo do Imóvel *</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button class="fchip active" onclick="selectAdmType('casa',this)" style="color:var(--text);background:var(--g100);border-color:var(--g200)">🏠 Casa</button>
+              <button class="fchip" onclick="selectAdmType('apartamento',this)" style="color:var(--text);background:var(--g100);border-color:var(--g200)">🏢 Apartamento</button>
+              <button class="fchip" onclick="selectAdmType('fazenda',this)" style="color:var(--text);background:var(--g100);border-color:var(--g200)">🌾 Fazenda/Sítio</button>
+              <button class="fchip" onclick="selectAdmType('terreno',this)" style="color:var(--text);background:var(--g100);border-color:var(--g200)">📐 Terreno</button>
+              <button class="fchip" onclick="selectAdmType('comercial',this)" style="color:var(--text);background:var(--g100);border-color:var(--g200)">🏪 Comercial</button>
+              <button class="fchip" onclick="selectAdmType('aluguel',this)" style="color:var(--text);background:var(--g100);border-color:var(--g200)">🔑 Aluguel</button>
+            </div>
+          </div>
+          <input type="hidden" id="adm-type" value="casa">
+          <div class="adm-form-grid">
+            <div class="adm-fg"><label>Título do Anúncio *</label><input type="text" id="adm-titulo" placeholder="Ex: Casa ampla com piscina no Centro"></div>
+            <div class="adm-fg"><label>Endereço / Localização *</label><input type="text" id="adm-endereco" placeholder="Rua, bairro ou município"></div>
+            <div class="adm-fg"><label>Cidade *</label><input type="text" id="adm-cidade" value="Passos"></div>
+            <div class="adm-fg"><label>Valor (R$) *</label><input type="text" id="adm-valor" placeholder="Ex: 350.000"></div>
+            <div class="adm-fg"><label>Área (m² ou ha)</label><input type="text" id="adm-area" placeholder="Ex: 120 m²"></div>
+            <div class="adm-fg"><label>Quartos</label><select id="adm-quartos"><option>-</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5+</option></select></div>
+            <div class="adm-fg"><label>Vagas</label><select id="adm-vagas"><option>-</option><option>0</option><option>1</option><option>2</option><option>3</option><option>4+</option></select></div>
+            <div class="adm-fg"><label>Modalidade</label><select id="adm-modal"><option>Venda</option><option>Locação</option><option>Arrendamento</option><option>Venda e Locação</option></select></div>
+          </div>
+          <div class="adm-fg"><label>Descrição Completa</label><textarea id="adm-desc" placeholder="Descreva o imóvel com todos os detalhes..."></textarea></div>
+          <div class="adm-form-grid">
+            <div class="adm-fg"><label>Link das Fotos (Drive/Photos)</label><input type="url" id="adm-fotos" placeholder="https://drive.google.com/..."></div>
+            <div class="adm-fg"><label>Destaque na Home?</label><select id="adm-destaque"><option>Não</option><option>Sim</option></select></div>
+          </div>
+          <div style="display:flex;gap:10px;margin-top:8px">
+            <button class="adm-btn adm-btn-gold" onclick="salvarImovelAdmin()">✓ Publicar Imóvel</button>
+            <button class="adm-btn adm-btn-ghost" onclick="salvarRascunho()">Salvar Rascunho</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB: LEADS -->
+      <div class="adm-tab" id="tab-leads">
+        <div class="adm-table-wrap">
+          <table class="adm-table">
+            <thead><tr><th>#</th><th>Nome</th><th>WhatsApp</th><th>E-mail</th><th>Interesse</th><th>Valor Máx.</th><th>Data</th><th></th></tr></thead>
+            <tbody id="leads-tbody">
+              <tr><td colspan="8" style="text-align:center;padding:40px;color:var(--textl)">Nenhum lead recebido ainda</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- TAB: AUDITORIA -->
+      <div class="adm-tab" id="tab-auditoria">
+        <div class="adm-table-wrap">
+          <div style="padding:16px 18px;font-size:12px;font-weight:700;color:var(--text);border-bottom:1px solid var(--g200)">Log de Auditoria Completo</div>
+          <div id="audit-full" style="padding:0 18px 12px"></div>
+        </div>
+      </div>
+
+      <!-- TAB: CONFIGURAÇÕES -->
+      <div class="adm-tab" id="tab-config">
+        <div class="adm-form-card">
+          <div class="adm-form-title">Configurações do Site</div>
+          <div class="adm-form-grid">
+            <div class="adm-fg"><label>Nome do Corretor</label><input type="text" value="Helder Freire"></div>
+            <div class="adm-fg"><label>CRECI</label><input type="text" value="CRECI-MG 62010"></div>
+            <div class="adm-fg"><label>WhatsApp (link)</label><input type="text" value="https://wa.me/qr/XGTDJPC5WY2QM1"></div>
+            <div class="adm-fg"><label>Cidade</label><input type="text" value="Passos — Minas Gerais"></div>
+            <div class="adm-fg"><label>E-mail</label><input type="email" placeholder="contato@helderfreire.com.br"></div>
+            <div class="adm-fg"><label>Instagram</label><input type="text" placeholder="@helderfreireimóveis"></div>
+          </div>
+          <div class="adm-fg"><label>Alterar Senha do Admin</label><input type="password" placeholder="Nova senha (deixe em branco para não alterar)" id="new-pass"></div>
+          <div style="display:flex;gap:10px;margin-top:8px">
+            <button class="adm-btn adm-btn-primary" onclick="saveConfig()">Salvar Configurações</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+
+<!-- ══════════════════════════════════════
+     FORMULÁRIO 1: CLIENTE (Quero um Imóvel)
+     ══════════════════════════════════════ -->
+<div class="iform-overlay" id="form-cliente">
+  <div class="iform-modal">
+    <div class="iform-header">
+      <div class="iform-logo">
+        <div class="iform-logo-circle"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8.5L6.5 12L13 4" stroke="#c9a84c" stroke-width="2" stroke-linecap="round"/></svg></div>
+        <div><div class="iform-logo-name">Helder Freire</div><div class="iform-logo-sub">CRECI-MG 62010</div></div>
+      </div>
+      <div class="iform-title">🔍 Quero Encontrar um Imóvel</div>
+      <div class="iform-subtitle">Preencha e Helder Freire entrará em contato com as melhores opções</div>
+      <button class="iform-close" onclick="closeForm('cliente')">✕</button>
+    </div>
+    <div class="iform-body">
+      <!-- progress -->
+      <div class="iform-progress">
+        <div class="ipstep active" id="cp1">1. Seus Dados</div>
+        <div class="ipstep" id="cp2">2. O Imóvel</div>
+        <div class="ipstep" id="cp3">3. Detalhes</div>
+      </div>
+
+      <!-- Corpo do formulário -->
+      <div id="c-body">
+        <!-- STEP 1 -->
+        <div class="iform-step active" id="cs1">
+          <div class="iform-info">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style="flex-shrink:0;margin-top:2px"><circle cx="8" cy="8" r="7.5" stroke="#38bdf8"/><path d="M8 5v4M8 11v.5" stroke="#38bdf8" stroke-width="1.5" stroke-linecap="round"/></svg>
+            Seus dados são enviados diretamente para Helder Freire e salvos no Google Sheets. Você receberá um retorno em até 24 horas.
+          </div>
+          <div class="ifgrid">
+            <div class="ifg"><label>Nome Completo *</label><input type="text" id="c-nome" placeholder="Seu nome completo"></div>
+            <div class="ifg"><label>WhatsApp *</label><input type="text" id="c-wa" placeholder="(35) 99999-9999" oninput="formatarWhatsApp(this)"></div>
+          </div>
+          <div class="ifgrid">
+            <div class="ifg"><label>E-mail</label><input type="email" id="c-email" placeholder="seu@email.com.br"></div>
+            <div class="ifg"><label>CPF <span style="font-weight:400;opacity:.6">(opcional)</span></label><input type="text" id="c-cpf" placeholder="000.000.000-00" oninput="formatarCPF(this)" maxlength="14"></div>
+          </div>
+          <div class="iform-nav">
+            <button class="iform-next" onclick="nextStep('c',1,2)">Próximo → Tipo do Imóvel</button>
+          </div>
+        </div>
+
+        <!-- STEP 2 -->
+        <div class="iform-step" id="cs2">
+          <div class="iform-slabel">Que tipo de imóvel você procura?</div>
+          <div class="iform-tipo-grid">
+            <button class="iform-tipo-btn sel" onclick="selTipo(this,'c-tipo','casa')"><span class="ticon">🏠</span>Casa</button>
+            <button class="iform-tipo-btn" onclick="selTipo(this,'c-tipo','apartamento')"><span class="ticon">🏢</span>Apartamento</button>
+            <button class="iform-tipo-btn" onclick="selTipo(this,'c-tipo','fazenda')"><span class="ticon">🌾</span>Fazenda/Sítio</button>
+            <button class="iform-tipo-btn" onclick="selTipo(this,'c-tipo','terreno')"><span class="ticon">📐</span>Terreno</button>
+            <button class="iform-tipo-btn" onclick="selTipo(this,'c-tipo','comercial')"><span class="ticon">🏪</span>Comercial</button>
+            <button class="iform-tipo-btn" onclick="selTipo(this,'c-tipo','qualquer')"><span class="ticon">🏘️</span>Qualquer</button>
+          </div>
+          <input type="hidden" id="c-tipo" value="casa">
+          <div class="ifgrid">
+            <div class="ifg"><label>Finalidade *</label>
+              <select id="c-final"><option>Comprar</option><option>Alugar</option></select></div>
+            <div class="ifg"><label>Valor Máximo</label>
+              <select id="c-valor"><option>Até R$ 150.000</option><option>Até R$ 250.000</option><option>Até R$ 400.000</option><option>Até R$ 600.000</option><option>Até R$ 1.000.000</option><option>Acima de R$ 1.000.000</option><option>A combinar</option></select></div>
+            <div class="ifg"><label>Quartos Mínimo</label>
+              <select id="c-quartos"><option>Indiferente</option><option>1+</option><option>2+</option><option>3+</option><option>4+</option></select></div>
+            <div class="ifg"><label>Bairro / Região</label>
+              <input type="text" id="c-bairro" placeholder="Ex: Centro, Vila Nova..."></div>
+          </div>
+          <div class="iform-nav">
+            <button class="iform-back" onclick="nextStep('c',2,1)">← Voltar</button>
+            <button class="iform-next" onclick="nextStep('c',2,3)">Próximo → Observações</button>
+          </div>
+        </div>
+
+        <!-- STEP 3 -->
+        <div class="iform-step" id="cs3">
+          <div class="iform-slabel">Informações Adicionais</div>
+          <div class="ifg"><label>Observações / O que é importante para você?</label>
+            <textarea id="c-obs" placeholder="Ex: preciso de quintal para os filhos, prefiro condomínio fechado, máximo 3km do centro, aceita financiamento..."></textarea></div>
+          <div class="ifg"><label>Como prefere ser contatado?</label>
+            <select id="c-contato"><option>WhatsApp (preferência)</option><option>Ligação telefônica</option><option>E-mail</option><option>Qualquer um</option></select></div>
+          <div class="ifg"><label>Quando pretende comprar/alugar?</label>
+            <select id="c-prazo"><option>Imediatamente (já decidi)</option><option>Em até 1 mês</option><option>Em até 3 meses</option><option>Em 6 meses ou mais</option><option>Ainda estou pesquisando</option></select></div>
+          <div class="cf-security-badge" style="margin-bottom:8px;margin-top:20px">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M12 2L4 6v6c0 5.25 3.5 10.15 8 11.35C16.5 22.15 20 17.25 20 12V6L12 2Z" fill="#22c55e" opacity=".2" stroke="#22c55e" stroke-width="1.5"/><path d="M9 12l2 2 4-4" stroke="#22c55e" stroke-width="1.5" stroke-linecap="round"/></svg>
+            Dados protegidos pela Cloudflare — confirme que não é um robô
+          </div>
+          <div id="ts-cliente" style="margin-bottom:14px"></div>
+          <div class="iform-nav">
+            <button class="iform-back" onclick="nextStep('c',3,2)">← Voltar</button>
+            <button class="iform-next" id="c-submit-btn" onclick="submitForm('cliente')" style="opacity:.4;pointer-events:none;cursor:not-allowed">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6.5" stroke="var(--navy)"/><path d="M3 7.5L5.5 10.5L11 4" stroke="var(--navy)" stroke-width="1.6" stroke-linecap="round"/></svg>
+              Enviar Solicitação
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- SUCCESS -->
+      <div class="iform-success" id="c-success">
+        <svg width="80" height="80" viewBox="0 0 80 80" fill="none" style="margin-bottom:20px">
+          <circle cx="40" cy="40" r="38" stroke="#22c55e" stroke-width="2.5"/>
+          <path d="M22 40.5L33 53L58 25" stroke="#22c55e" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <div style="font-family:'Cormorant Garamond',serif;font-size:30px;color:var(--white);margin-bottom:8px">Solicitação Enviada! ✓</div>
+        <div style="font-size:13px;color:rgba(255,255,255,.5);max-width:340px;line-height:1.8;margin-bottom:8px">Helder Freire recebeu sua solicitação e entrará em contato pelo WhatsApp em breve.</div>
+        <div id="c-sheets-note" style="font-size:11px;color:rgba(255,255,255,.3);margin-bottom:24px"></div>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center">
+          <a href="https://wa.me/qr/XGTDJPC5WY2QM1" target="_blank" class="wa-big-btn" style="font-size:12px;padding:12px 20px">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+            Falar no WhatsApp
+          </a>
+          <button class="iform-back" onclick="closeForm('cliente')" style="padding:12px 20px">Fechar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

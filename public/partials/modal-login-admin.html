@@ -1,0 +1,173 @@
+<!-- ═══════════════════════════════════════════════
+     FORMULÁRIO 2: PROPRIETÁRIO (Cadastrar Imóvel)
+     ═══════════════════════════════════════════════ -->
+<div class="iform-overlay" id="form-proprietario">
+  <div class="iform-modal">
+    <div class="iform-header">
+      <div class="iform-logo">
+        <div class="iform-logo-circle"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8.5L6.5 12L13 4" stroke="#c9a84c" stroke-width="2" stroke-linecap="round"/></svg></div>
+        <div><div class="iform-logo-name">Helder Freire</div><div class="iform-logo-sub">CRECI-MG 62010</div></div>
+      </div>
+      <div class="iform-title">🏠 Cadastrar meu Imóvel</div>
+      <div class="iform-subtitle">Dados enviados para Helder Freire e salvos no Google Sheets automaticamente</div>
+      <button class="iform-close" onclick="closeForm('proprietario')">✕</button>
+    </div>
+    <div class="iform-body">
+      <div class="iform-progress">
+        <div class="ipstep active" id="pp1">1. Tipo</div>
+        <div class="ipstep" id="pp2">2. Proprietário</div>
+        <div class="ipstep" id="pp3">3. Imóvel</div>
+        <div class="ipstep" id="pp4">4. Detalhes</div>
+      </div>
+
+      <div id="p-body">
+        <!-- STEP 1: Tipo -->
+        <div class="iform-step active" id="ps1">
+          <div class="iform-slabel">Qual o tipo do seu imóvel?</div>
+          <div class="iform-tipo-grid">
+            <button class="iform-tipo-btn sel" onclick="selTipo(this,'p-tipo','casa');showPFields('casa')"><span class="ticon">🏠</span>Casa</button>
+            <button class="iform-tipo-btn" onclick="selTipo(this,'p-tipo','apartamento');showPFields('apartamento')"><span class="ticon">🏢</span>Apartamento</button>
+            <button class="iform-tipo-btn" onclick="selTipo(this,'p-tipo','fazenda');showPFields('fazenda')"><span class="ticon">🌾</span>Fazenda/Sítio</button>
+            <button class="iform-tipo-btn" onclick="selTipo(this,'p-tipo','terreno');showPFields('terreno')"><span class="ticon">📐</span>Terreno</button>
+            <button class="iform-tipo-btn" onclick="selTipo(this,'p-tipo','comercial');showPFields('comercial')"><span class="ticon">🏪</span>Comercial</button>
+            <button class="iform-tipo-btn" onclick="selTipo(this,'p-tipo','aluguel');showPFields('aluguel')"><span class="ticon">🔑</span>Só p/ Aluguel</button>
+          </div>
+          <input type="hidden" id="p-tipo" value="casa">
+          <div class="ifg"><label>Modalidade *</label>
+            <select id="p-modal"><option>Venda</option><option>Locação</option><option>Venda e Locação</option><option>Arrendamento</option></select></div>
+          <div class="iform-nav">
+            <button class="iform-next" onclick="nextStep('p',1,2)">Próximo → Seus Dados</button>
+          </div>
+        </div>
+
+        <!-- STEP 2: Proprietário -->
+        <div class="iform-step" id="ps2">
+          <div class="iform-slabel">Dados do Proprietário</div>
+          <div class="ifgrid">
+            <div class="ifg"><label>Nome Completo *</label><input type="text" id="p-nome" placeholder="Seu nome"></div>
+            <div class="ifg"><label>WhatsApp *</label><input type="text" id="p-wa" placeholder="(35) 99999-9999" oninput="formatarWhatsApp(this)"></div>
+          </div>
+          <div class="ifgrid">
+            <div class="ifg"><label>E-mail *</label><input type="email" id="p-email" placeholder="seu@email.com.br"></div>
+            <div class="ifg"><label>CPF <span style="font-weight:400;opacity:.6">(opcional)</span></label><input type="text" id="p-cpf" placeholder="000.000.000-00" oninput="formatarCPF(this)" maxlength="14"></div>
+          </div>
+          <div class="ifg"><label>Você é o proprietário?</label>
+            <select id="p-prop"><option>Sim, sou o proprietário</option><option>Sou o cônjuge/familiar</option><option>Sou procurador/representante</option><option>Imóvel de inventário</option></select></div>
+          <div class="iform-nav">
+            <button class="iform-back" onclick="nextStep('p',2,1)">← Voltar</button>
+            <button class="iform-next" onclick="nextStep('p',2,3)">Próximo → Dados do Imóvel</button>
+          </div>
+        </div>
+
+        <!-- STEP 3: Imóvel (campos gerais + específicos por tipo) -->
+        <div class="iform-step" id="ps3">
+          <div class="iform-slabel">Localização e Valor</div>
+          <div class="ifgrid">
+            <div class="ifg"><label>CEP <span style="font-weight:400;opacity:.6">(opcional)</span></label><input type="text" id="p-cep" placeholder="00000-000" oninput="formatarCEP(this)" onblur="buscarCEP(this)" maxlength="9"></div>
+            <div class="ifg"><label>Cidade *</label><input type="text" id="p-cidade" value="Passos"></div>
+          </div>
+          <div class="ifgrid">
+            <div class="ifg iffull"><label>Endereço Completo *</label><input type="text" id="p-end" placeholder="Rua, número, bairro — ou localização rural"></div>
+            <div class="ifg"><label>Valor (R$) *</label><input type="text" id="p-valor" placeholder="Ex: 350.000"></div>
+          </div>
+
+          <!-- Campos CASA/APARTAMENTO/ALUGUEL -->
+          <div id="pf-residencial">
+            <div class="ifgrid col3">
+              <div class="ifg"><label>Quartos</label><select id="p-quartos"><option>1</option><option>2</option><option>3</option><option>4</option><option>5+</option></select></div>
+              <div class="ifg"><label>Suítes</label><select id="p-suites"><option>0</option><option>1</option><option>2</option><option>3+</option></select></div>
+              <div class="ifg"><label>Vagas</label><select id="p-vagas"><option>0</option><option>1</option><option>2</option><option>3+</option></select></div>
+              <div class="ifg"><label>Área (m²)</label><input type="number" id="p-area" placeholder="Ex: 120"></div>
+              <div class="ifg"><label>Aceita FGTS?</label><select id="p-fgts"><option>Sim</option><option>Não</option></select></div>
+              <div class="ifg"><label>Aceita Financ.?</label><select id="p-fin"><option>Sim</option><option>Não</option></select></div>
+            </div>
+          </div>
+
+          <!-- Campos FAZENDA -->
+          <div id="pf-fazenda" style="display:none">
+            <div class="ifgrid">
+              <div class="ifg"><label>Área Total (hectares) *</label><input type="number" id="p-ha" placeholder="Ex: 150"></div>
+              <div class="ifg"><label>Nº de Alqueires</label><input type="number" id="p-alq" placeholder="Ex: 72"></div>
+              <div class="ifg"><label>Pastagem (ha)</label><input type="number" id="p-past" placeholder="Ex: 100"></div>
+              <div class="ifg"><label>Reserva Legal (ha)</label><input type="number" id="p-reserva" placeholder="Ex: 30"></div>
+              <div class="ifg"><label>Distância de Passos (km)</label><input type="number" id="p-dist" placeholder="Ex: 35"></div>
+              <div class="ifg"><label>Casa Sede?</label><select id="p-sede"><option>Sim</option><option>Não</option></select></div>
+              <div class="ifg"><label>Curral?</label><select id="p-curral"><option>Sim</option><option>Não</option></select></div>
+              <div class="ifg"><label>Açude/Lagoa?</label><select id="p-acude"><option>Sim</option><option>Não</option></select></div>
+            </div>
+          </div>
+
+          <!-- Campos TERRENO -->
+          <div id="pf-terreno" style="display:none">
+            <div class="ifgrid">
+              <div class="ifg"><label>Área (m²) *</label><input type="number" id="p-tarea" placeholder="Ex: 500"></div>
+              <div class="ifg"><label>Frente (m)</label><input type="number" id="p-frente" placeholder="Ex: 12"></div>
+              <div class="ifg"><label>Topografia</label><select id="p-topo"><option>Plano</option><option>Aclive</option><option>Declive</option><option>Irregular</option></select></div>
+              <div class="ifg"><label>Documentação</label><select id="p-doc"><option>Escriturado</option><option>Contrato de Compra e Venda</option><option>Posse</option><option>Em inventário</option></select></div>
+            </div>
+          </div>
+
+          <!-- Campos COMERCIAL -->
+          <div id="pf-comercial" style="display:none">
+            <div class="ifgrid">
+              <div class="ifg"><label>Subtipo</label><select id="p-subtipo"><option>Loja</option><option>Sala Comercial</option><option>Galpão</option><option>Prédio</option><option>Ponto Comercial</option></select></div>
+              <div class="ifg"><label>Área (m²) *</label><input type="number" id="p-carea" placeholder="Ex: 250"></div>
+              <div class="ifg"><label>Vagas Estac.</label><input type="number" id="p-cvagas" placeholder="Ex: 10"></div>
+              <div class="ifg"><label>Localização</label><select id="p-cloc"><option>Centro</option><option>Bairro Comercial</option><option>Zona Industrial</option><option>Estrada/Rodovia</option></select></div>
+            </div>
+          </div>
+
+          <div class="iform-nav">
+            <button class="iform-back" onclick="nextStep('p',3,2)">← Voltar</button>
+            <button class="iform-next" onclick="nextStep('p',3,4)">Próximo → Fotos e Descrição</button>
+          </div>
+        </div>
+
+        <!-- STEP 4: Fotos e Descrição -->
+        <div class="iform-step" id="ps4">
+          <div class="iform-slabel">Fotos e Informações Finais</div>
+          <div class="iform-info">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style="flex-shrink:0;margin-top:2px"><circle cx="8" cy="8" r="7.5" stroke="#38bdf8"/><path d="M8 5v4M8 11v.5" stroke="#38bdf8" stroke-width="1.5" stroke-linecap="round"/></svg>
+            Para enviar fotos: suba-as no <strong>Google Drive ou Google Photos</strong>, copie o link de compartilhamento e cole abaixo.
+          </div>
+          <div class="ifg"><label>Link das Fotos (Google Drive / Google Photos)</label>
+            <input type="url" id="p-fotos" placeholder="https://drive.google.com/drive/folders/..."></div>
+          <div class="ifg"><label>Descrição e Diferenciais do Imóvel</label>
+            <textarea id="p-desc" placeholder="Descreva o que torna seu imóvel especial: reformado, localização, área verde, benfeitorias..."></textarea></div>
+          <div class="ifg"><label>Valor do Condomínio ou IPTU (se aplicável)</label>
+            <input type="text" id="p-condo" placeholder="Ex: Condomínio R$ 450/mês, IPTU R$ 80/mês"></div>
+          <div class="cf-security-badge" style="margin-bottom:8px;margin-top:20px">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M12 2L4 6v6c0 5.25 3.5 10.15 8 11.35C16.5 22.15 20 17.25 20 12V6L12 2Z" fill="#22c55e" opacity=".2" stroke="#22c55e" stroke-width="1.5"/><path d="M9 12l2 2 4-4" stroke="#22c55e" stroke-width="1.5" stroke-linecap="round"/></svg>
+            Dados protegidos pela Cloudflare — confirme que não é um robô
+          </div>
+          <div id="ts-proprietario" style="margin-bottom:14px"></div>
+          <div class="iform-nav">
+            <button class="iform-back" onclick="nextStep('p',4,3)">← Voltar</button>
+            <button class="iform-next" id="p-submit-btn" onclick="submitForm('proprietario')" style="opacity:.4;pointer-events:none;cursor:not-allowed">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6.5" stroke="var(--navy)"/><path d="M3 7.5L5.5 10.5L11 4" stroke="var(--navy)" stroke-width="1.6" stroke-linecap="round"/></svg>
+              Enviar para Helder Freire
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- SUCCESS -->
+      <div class="iform-success" id="p-success">
+        <svg width="80" height="80" viewBox="0 0 80 80" fill="none" style="margin-bottom:20px">
+          <circle cx="40" cy="40" r="38" stroke="#c9a84c" stroke-width="2.5"/>
+          <path d="M22 40.5L33 53L58 25" stroke="#c9a84c" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <div style="font-family:'Cormorant Garamond',serif;font-size:30px;color:var(--white);margin-bottom:8px">Imóvel Cadastrado! ✓</div>
+        <div style="font-size:13px;color:rgba(255,255,255,.5);max-width:360px;line-height:1.8;margin-bottom:8px">Helder Freire recebeu os dados e entrará em contato em até 24 horas para confirmar e publicar seu imóvel.</div>
+        <div id="p-sheets-note" style="font-size:11px;color:rgba(255,255,255,.3);margin-bottom:24px"></div>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center">
+          <a href="https://wa.me/qr/XGTDJPC5WY2QM1" target="_blank" class="wa-big-btn" style="font-size:12px;padding:12px 20px">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+            Falar no WhatsApp
+          </a>
+          <button class="iform-back" onclick="closeForm('proprietario')" style="padding:12px 20px">Fechar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

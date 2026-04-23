@@ -1,0 +1,21 @@
+<!-- ══ REJECT REASON MODAL ══ -->
+<div class="reject-modal" id="rejectModal">
+  <div class="reject-card">
+    <div class="reject-title">Motivo da Rejeição</div>
+    <div class="adm-fg"><label>Descreva o motivo</label>
+      <textarea id="rejectReason" style="width:100%;padding:10px;border:1.5px solid #e2e8f0;border-radius:6px;font-family:'Outfit',sans-serif;font-size:13px;min-height:90px;resize:vertical;outline:none" placeholder="Ex: Documentação incompleta, valor incorreto..."></textarea>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:8px">
+      <button class="adm-btn adm-btn-danger" onclick="confirmReject()" style="flex:1">Confirmar Rejeição</button>
+      <button class="adm-btn adm-btn-ghost" onclick="closeRejectModal()" style="flex:1">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL DETALHES ══ -->
+<div id="det-modal" style="display:none;position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,.85);align-items:center;justify-content:center;padding:16px" onclick="if(event.target===this)closeDetModal()">
+</div>
+
+<!-- ══ MODAL IMÓVEL PÚBLICO ══ -->
+<div id="pub-modal" style="display:none;position:fixed;inset:0;z-index:8500;background:rgba(0,0,0,.80);align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(6px)" onclick="if(event.target===this)fecharModalImovel()">
+</div>

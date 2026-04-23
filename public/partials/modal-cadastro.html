@@ -1,0 +1,191 @@
+<!-- ══════════════════════════
+     MODAL: CADASTRO DE IMÓVEL
+     ══════════════════════════ -->
+<div class="modal-overlay" id="cadastroModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div><div class="modal-title">Cadastrar Imóvel</div><div class="modal-sub">Preencha os dados do seu imóvel</div></div>
+      <button class="modal-close" onclick="closeCadastroModal()">✕</button>
+    </div>
+    <div class="modal-body" id="cadastroBody">
+      <div class="modal-info-box">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style="flex-shrink:0;margin-top:2px"><circle cx="8" cy="8" r="7.5" stroke="#38bdf8"/><path d="M8 5v4M8 11v.5" stroke="#38bdf8" stroke-width="1.5" stroke-linecap="round"/></svg>
+        Selecione o tipo de imóvel. Cada categoria tem campos específicos. Após envio, Helder Freire avaliará e entrará em contato.
+      </div>
+      <!-- tipo selector -->
+      <div class="type-selector">
+        <button class="type-btn active" onclick="selectType('casa',this)"><span class="type-icon">🏠</span>Casa</button>
+        <button class="type-btn" onclick="selectType('apartamento',this)"><span class="type-icon">🏢</span>Apartamento</button>
+        <button class="type-btn" onclick="selectType('fazenda',this)"><span class="type-icon">🌾</span>Fazenda/Sítio</button>
+        <button class="type-btn" onclick="selectType('terreno',this)"><span class="type-icon">📐</span>Terreno</button>
+        <button class="type-btn" onclick="selectType('comercial',this)"><span class="type-icon">🏪</span>Comercial</button>
+        <button class="type-btn" onclick="selectType('aluguel',this)"><span class="type-icon">🔑</span>Aluguel</button>
+      </div>
+      <!-- CAMPOS COMUNS -->
+      <div class="section-label">Dados do Proprietário</div>
+      <div class="form-grid">
+        <div class="fg"><label>Nome Completo *</label><input type="text" id="c_nome" placeholder="Seu nome"></div>
+        <div class="fg"><label>WhatsApp *</label><input type="text" id="c_wa" placeholder="(35) 99999-9999"></div>
+      </div>
+      <div class="fg"><label>E-mail</label><input type="email" id="c_email" placeholder="seu@email.com.br"></div>
+      <!-- CAMPOS CASA -->
+      <div class="fields-group active" id="fields-casa">
+        <div class="section-label">Dados da Casa</div>
+        <div class="form-grid">
+          <div class="fg"><label>Endereço / Bairro *</label><input type="text" placeholder="Rua, nº, bairro"></div>
+          <div class="fg"><label>Modalidade *</label><select><option>Venda</option><option>Locação</option><option>Venda e Locação</option></select></div>
+          <div class="fg"><label>Valor (R$) *</label><input type="text" placeholder="Ex: 350.000"></div>
+          <div class="fg"><label>Área Construída (m²)</label><input type="number" placeholder="Ex: 120"></div>
+          <div class="fg"><label>Área do Terreno (m²)</label><input type="number" placeholder="Ex: 300"></div>
+          <div class="fg"><label>Nº Quartos</label><select><option>1</option><option>2</option><option>3</option><option>4</option><option>5+</option></select></div>
+          <div class="fg"><label>Suítes</label><select><option>0</option><option>1</option><option>2</option><option>3</option><option>4+</option></select></div>
+          <div class="fg"><label>Banheiros</label><select><option>1</option><option>2</option><option>3</option><option>4+</option></select></div>
+          <div class="fg"><label>Vagas Garagem</label><select><option>0</option><option>1</option><option>2</option><option>3</option><option>4+</option></select></div>
+          <div class="fg"><label>Nº Pavimentos</label><select><option>1</option><option>2</option><option>3+</option></select></div>
+          <div class="fg"><label>Piscina?</label><select><option>Não</option><option>Sim</option></select></div>
+          <div class="fg"><label>Churrasqueira?</label><select><option>Não</option><option>Sim</option></select></div>
+          <div class="fg"><label>Aceita FGTS?</label><select><option>Sim</option><option>Não</option></select></div>
+          <div class="fg"><label>Aceita Financiamento?</label><select><option>Sim</option><option>Não</option></select></div>
+        </div>
+        <div class="fg"><label>Link das Fotos (Google Drive/Photos)</label><input type="url" placeholder="https://drive.google.com/..."></div>
+        <div class="fg"><label>Descrição e Diferenciais</label><textarea placeholder="Descreva o imóvel: quintal grande, reformado, localização privilegiada..."></textarea></div>
+      </div>
+      <!-- CAMPOS APARTAMENTO -->
+      <div class="fields-group" id="fields-apartamento">
+        <div class="section-label">Dados do Apartamento</div>
+        <div class="form-grid">
+          <div class="fg"><label>Endereço / Bairro *</label><input type="text" placeholder="Rua, nº, bairro"></div>
+          <div class="fg"><label>Modalidade *</label><select><option>Venda</option><option>Locação</option><option>Venda e Locação</option></select></div>
+          <div class="fg"><label>Valor (R$) *</label><input type="text" placeholder="Ex: 280.000"></div>
+          <div class="fg"><label>Área (m²) *</label><input type="number" placeholder="Ex: 75"></div>
+          <div class="fg"><label>Andar</label><input type="number" placeholder="Ex: 5"></div>
+          <div class="fg"><label>Total de Andares</label><input type="number" placeholder="Ex: 12"></div>
+          <div class="fg"><label>Nº Quartos</label><select><option>1</option><option>2</option><option>3</option><option>4</option><option>5+</option></select></div>
+          <div class="fg"><label>Suítes</label><select><option>0</option><option>1</option><option>2</option><option>3+</option></select></div>
+          <div class="fg"><label>Banheiros</label><select><option>1</option><option>2</option><option>3+</option></select></div>
+          <div class="fg"><label>Vagas</label><select><option>0</option><option>1</option><option>2</option><option>3+</option></select></div>
+          <div class="fg"><label>Elevador?</label><select><option>Sim</option><option>Não</option></select></div>
+          <div class="fg"><label>Portaria 24h?</label><select><option>Sim</option><option>Não</option></select></div>
+          <div class="fg"><label>Área de Lazer?</label><select><option>Sim</option><option>Não</option></select></div>
+          <div class="fg"><label>Varanda?</label><select><option>Sim</option><option>Não</option></select></div>
+          <div class="fg"><label>Condomínio (R$/mês)</label><input type="text" placeholder="Ex: 450"></div>
+          <div class="fg"><label>IPTU (R$/ano)</label><input type="text" placeholder="Ex: 1.200"></div>
+        </div>
+        <div class="fg"><label>Link das Fotos</label><input type="url" placeholder="https://drive.google.com/..."></div>
+        <div class="fg"><label>Descrição</label><textarea placeholder="Diferenciais do apartamento..."></textarea></div>
+      </div>
+      <!-- CAMPOS FAZENDA -->
+      <div class="fields-group" id="fields-fazenda">
+        <div class="section-label">Dados da Fazenda / Sítio</div>
+        <div class="form-grid">
+          <div class="fg"><label>Nome da Fazenda</label><input type="text" placeholder="Ex: Fazenda Boa Esperança"></div>
+          <div class="fg"><label>Município *</label><input type="text" placeholder="Ex: Passos, Piumhi..."></div>
+          <div class="fg"><label>Modalidade *</label><select><option>Venda</option><option>Arrendamento</option><option>Venda e Arrendamento</option></select></div>
+          <div class="fg"><label>Valor (R$) *</label><input type="text" placeholder="Ex: 2.500.000"></div>
+          <div class="fg"><label>Área Total (hectares) *</label><input type="number" placeholder="Ex: 150"></div>
+          <div class="fg"><label>Área de Pastagem (ha)</label><input type="number" placeholder="Ex: 100"></div>
+          <div class="fg"><label>Área de Reserva (ha)</label><input type="number" placeholder="Ex: 30"></div>
+          <div class="fg"><label>Área de Cultura (ha)</label><input type="number" placeholder="Ex: 20"></div>
+          <div class="fg"><label>Nº Alqueires</label><input type="number" placeholder="Ex: 72"></div>
+          <div class="fg"><label>Capacidade Pecuária (UA)</label><input type="number" placeholder="Ex: 300"></div>
+          <div class="fg"><label>Curral?</label><select><option>Sim</option><option>Não</option></select></div>
+          <div class="fg"><label>Casa Sede?</label><select><option>Sim</option><option>Não</option></select></div>
+          <div class="fg"><label>Açude/Lagoa?</label><select><option>Sim</option><option>Não</option></select></div>
+          <div class="fg"><label>Piscicultura?</label><select><option>Não</option><option>Sim</option></select></div>
+          <div class="fg"><label>Fruticultura?</label><select><option>Não</option><option>Sim</option></select></div>
+          <div class="fg"><label>Café?</label><select><option>Não</option><option>Sim</option></select></div>
+          <div class="fg"><label>Cana?</label><select><option>Não</option><option>Sim</option></select></div>
+          <div class="fg"><label>Distância de Passos (km)</label><input type="number" placeholder="Ex: 35"></div>
+          <div class="fg"><label>Km de Asfalto</label><input type="number" placeholder="Ex: 20"></div>
+          <div class="fg"><label>Energia Elétrica?</label><select><option>Sim</option><option>Não</option></select></div>
+          <div class="fg"><label>Água Encanada?</label><select><option>Sim</option><option>Não</option></select></div>
+        </div>
+        <div class="fg"><label>Benfeitorias (silos, currais, galpões...)</label><textarea placeholder="Descreva as benfeitorias da fazenda..."></textarea></div>
+        <div class="fg"><label>Link das Fotos</label><input type="url" placeholder="https://drive.google.com/..."></div>
+        <div class="fg"><label>Observações Gerais</label><textarea placeholder="Informações adicionais sobre a fazenda..."></textarea></div>
+      </div>
+      <!-- CAMPOS TERRENO -->
+      <div class="fields-group" id="fields-terreno">
+        <div class="section-label">Dados do Terreno</div>
+        <div class="form-grid">
+          <div class="fg"><label>Endereço / Bairro *</label><input type="text" placeholder="Localização do terreno"></div>
+          <div class="fg"><label>Modalidade *</label><select><option>Venda</option><option>Locação</option></select></div>
+          <div class="fg"><label>Valor (R$) *</label><input type="text" placeholder="Ex: 120.000"></div>
+          <div class="fg"><label>Área Total (m²) *</label><input type="number" placeholder="Ex: 500"></div>
+          <div class="fg"><label>Frente (m)</label><input type="number" placeholder="Ex: 12"></div>
+          <div class="fg"><label>Fundo (m)</label><input type="number" placeholder="Ex: 40"></div>
+          <div class="fg"><label>Topografia</label><select><option>Plano</option><option>Aclive</option><option>Declive</option><option>Irregular</option></select></div>
+          <div class="fg"><label>Zoneamento</label><select><option>Residencial</option><option>Comercial</option><option>Industrial</option><option>Rural</option><option>Misto</option></select></div>
+          <div class="fg"><label>Documentação</label><select><option>Escriturado</option><option>Contrato de Compra e Venda</option><option>Posse</option><option>Inventário</option></select></div>
+          <div class="fg"><label>Muro?</label><select><option>Não</option><option>Parcial</option><option>Total</option></select></div>
+          <div class="fg"><label>Água?</label><select><option>Sim</option><option>Não</option></select></div>
+          <div class="fg"><label>Esgoto?</label><select><option>Sim</option><option>Não</option></select></div>
+          <div class="fg"><label>Energia?</label><select><option>Sim</option><option>Não</option></select></div>
+          <div class="fg"><label>Aceita FGTS?</label><select><option>Sim</option><option>Não</option></select></div>
+        </div>
+        <div class="fg"><label>Link das Fotos</label><input type="url" placeholder="https://drive.google.com/..."></div>
+        <div class="fg"><label>Observações</label><textarea placeholder="Informações adicionais sobre o terreno..."></textarea></div>
+      </div>
+      <!-- CAMPOS COMERCIAL -->
+      <div class="fields-group" id="fields-comercial">
+        <div class="section-label">Dados do Imóvel Comercial</div>
+        <div class="form-grid">
+          <div class="fg"><label>Endereço / Bairro *</label><input type="text" placeholder="Rua, nº, bairro"></div>
+          <div class="fg"><label>Subtipo *</label><select><option>Loja</option><option>Sala Comercial</option><option>Galpão</option><option>Prédio Comercial</option><option>Ponto Comercial</option><option>Pavilhão</option></select></div>
+          <div class="fg"><label>Modalidade *</label><select><option>Venda</option><option>Locação</option><option>Venda e Locação</option></select></div>
+          <div class="fg"><label>Valor (R$) *</label><input type="text" placeholder="Ex: 800.000"></div>
+          <div class="fg"><label>Área Total (m²) *</label><input type="number" placeholder="Ex: 250"></div>
+          <div class="fg"><label>Pé-Direito (m)</label><input type="number" placeholder="Ex: 4"></div>
+          <div class="fg"><label>Nº Salas/Ambientes</label><input type="number" placeholder="Ex: 3"></div>
+          <div class="fg"><label>Banheiros</label><select><option>1</option><option>2</option><option>3</option><option>4+</option></select></div>
+          <div class="fg"><label>Vagas Estacionamento</label><input type="number" placeholder="Ex: 10"></div>
+          <div class="fg"><label>Localização</label><select><option>Centro</option><option>Bairro Comercial</option><option>Periferia</option><option>Estrada/Rodovia</option><option>Zona Industrial</option></select></div>
+          <div class="fg"><label>Fachada?</label><select><option>Sim</option><option>Não</option></select></div>
+          <div class="fg"><label>Ar Condicionado?</label><select><option>Não</option><option>Sim</option></select></div>
+        </div>
+        <div class="fg"><label>Link das Fotos</label><input type="url" placeholder="https://drive.google.com/..."></div>
+        <div class="fg"><label>Descrição</label><textarea placeholder="Descreva o imóvel comercial, infraestrutura, diferenciais..."></textarea></div>
+      </div>
+      <!-- CAMPOS ALUGUEL -->
+      <div class="fields-group" id="fields-aluguel">
+        <div class="section-label">Dados para Locação</div>
+        <div class="form-grid">
+          <div class="fg"><label>Tipo de Imóvel *</label><select><option>Casa</option><option>Apartamento</option><option>Sala Comercial</option><option>Galpão</option><option>Ponto Comercial</option><option>Quarto</option><option>Kitnet</option></select></div>
+          <div class="fg"><label>Endereço / Bairro *</label><input type="text" placeholder="Rua, nº, bairro"></div>
+          <div class="fg"><label>Valor do Aluguel (R$/mês) *</label><input type="text" placeholder="Ex: 1.200"></div>
+          <div class="fg"><label>IPTU (R$/mês)</label><input type="text" placeholder="Ex: 80"></div>
+          <div class="fg"><label>Condomínio (R$/mês)</label><input type="text" placeholder="Ex: 200"></div>
+          <div class="fg"><label>Área (m²)</label><input type="number" placeholder="Ex: 80"></div>
+          <div class="fg"><label>Nº Quartos</label><select><option>Kitnet</option><option>1</option><option>2</option><option>3</option><option>4+</option></select></div>
+          <div class="fg"><label>Vagas</label><select><option>0</option><option>1</option><option>2</option><option>3+</option></select></div>
+          <div class="fg"><label>Período Mínimo</label><select><option>12 meses</option><option>6 meses</option><option>3 meses</option><option>Mensal</option></select></div>
+          <div class="fg"><label>Garantia Exigida</label><select><option>Fiador</option><option>Seguro Fiança</option><option>Depósito 3 meses</option><option>Título de Capitalização</option><option>Negociável</option></select></div>
+          <div class="fg"><label>Aceita Pet?</label><select><option>Não</option><option>Sim</option><option>Negociável</option></select></div>
+          <div class="fg"><label>Mobiliado?</label><select><option>Não</option><option>Semi-mobiliado</option><option>Totalmente mobiliado</option></select></div>
+        </div>
+        <div class="fg"><label>Link das Fotos</label><input type="url" placeholder="https://drive.google.com/..."></div>
+        <div class="fg"><label>Descrição e Condições Adicionais</label><textarea placeholder="Descreva o imóvel e condições para locação..."></textarea></div>
+      </div>
+      <div class="cf-security-badge">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 2L4 6v6c0 5.25 3.5 10.15 8 11.35C16.5 22.15 20 17.25 20 12V6L12 2Z" fill="#22c55e" opacity=".2" stroke="#22c55e" stroke-width="1.5"/><path d="M9 12l2 2 4-4" stroke="#22c55e" stroke-width="1.5" stroke-linecap="round"/></svg>
+        Seus dados são transmitidos com criptografia SSL e protegidos pela Cloudflare
+      </div>
+      <div id="ts-cadastro" style="margin:12px 0"></div>
+      <button class="modal-submit" id="btn-cadastro-submit" onclick="submitCadastro()" disabled style="opacity:.5;cursor:not-allowed">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7.5" stroke="var(--navy)"/><path d="M4 8.5L6.5 11.5L12 4.5" stroke="var(--navy)" stroke-width="2" stroke-linecap="round"/></svg>
+        Verificar para Enviar
+      </button>
+    </div>
+    <div class="success-screen" id="cadastroSuccess">
+      <svg width="80" height="80" viewBox="0 0 80 80" fill="none" class="success-check-svg">
+        <circle cx="40" cy="40" r="38" stroke="#c9a84c" stroke-width="2.5"/>
+        <path d="M20 40.5L32 54L60 24" stroke="#c9a84c" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <div style="font-family:'Cormorant Garamond',serif;font-size:30px;color:var(--white);margin-bottom:10px">Imóvel Cadastrado! ✓</div>
+      <div style="font-size:13px;color:rgba(255,255,255,.5);max-width:340px;line-height:1.8;margin-bottom:28px">Helder Freire avaliará as informações e entrará em contato em até 24 horas para confirmar o cadastro.</div>
+      <button class="modal-submit" style="max-width:220px" onclick="closeCadastroModal()">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════

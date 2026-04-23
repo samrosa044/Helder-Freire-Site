@@ -1,0 +1,20 @@
+<!-- ══ LOGIN SCREEN ══ -->
+<div class="login-screen" id="loginScreen">
+  <div class="login-card">
+    <div style="font-size:36px;margin-bottom:8px">
+      <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+        <circle cx="24" cy="24" r="23" stroke="#c9a84c" stroke-width="1.5"/>
+        <path d="M14 24.5L20 31L34 17" stroke="#c9a84c" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <div class="login-logo">Helder Freire</div>
+    <div class="login-sub">Painel Administrativo</div>
+    <div class="login-err" id="loginErr">Usuário ou senha incorretos</div>
+    <div style="text-align:left">
+      <div class="adm-fg"><label>Usuário</label><input type="text" id="loginUser" placeholder="admin" autocomplete="username"></div>
+      <div class="adm-fg"><label>Senha</label><input type="password" id="loginPass" placeholder="••••••••" autocomplete="current-password"></div>
+    </div>
+    <button class="login-btn" onclick="doLogin()">Entrar no Painel</button>
+    <button style="margin-top:12px;background:none;border:none;color:rgba(255,255,255,.4);font-size:11px;cursor:pointer;font-family:'Outfit',sans-serif" onclick="closeLoginAndAdmin()">Cancelar</button>
+  </div>
+</div>
