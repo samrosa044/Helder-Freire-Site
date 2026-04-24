@@ -1,0 +1,324 @@
+/* ════════════════════════════════════════════
+   HELDER FREIRE IMÓVEIS — mobile.css
+   Responsividade para telas até 768px
+   ════════════════════════════════════════════ */
+
+/* ─── NAV MOBILE ─── */
+@media (max-width: 768px) {
+  nav {
+    padding: 0 20px;
+    height: 64px;
+  }
+
+  .nav-links {
+    display: none;
+    position: fixed;
+    top: 64px;
+    left: 0;
+    right: 0;
+    background: rgba(12, 36, 97, 0.98);
+    backdrop-filter: blur(16px);
+    flex-direction: column;
+    padding: 20px 24px 28px;
+    gap: 0;
+    border-bottom: 1px solid rgba(201, 168, 76, 0.2);
+    z-index: 999;
+  }
+
+  .nav-links.open {
+    display: flex;
+  }
+
+  .nav-links li {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  }
+
+  .nav-links li a {
+    display: block;
+    padding: 14px 0;
+    font-size: 15px;
+    color: rgba(255, 255, 255, 0.85);
+    letter-spacing: 1px;
+  }
+
+  .nav-hamburger {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    cursor: pointer;
+    padding: 6px;
+    background: none;
+    border: none;
+  }
+
+  .nav-hamburger span {
+    display: block;
+    width: 24px;
+    height: 2px;
+    background: var(--gold);
+    border-radius: 2px;
+    transition: all 0.3s;
+  }
+
+  .nav-logo-name {
+    font-size: 16px;
+    letter-spacing: 1.5px;
+  }
+
+  .nav-logo-sub {
+    font-size: 8px;
+    letter-spacing: 2px;
+  }
+}
+
+/* ─── HERO MOBILE ─── */
+@media (max-width: 768px) {
+  .hero-content {
+    padding: 0 20px;
+    text-align: center;
+  }
+
+  .hero-content h1 {
+    font-size: 38px !important;
+    line-height: 1.15;
+  }
+
+  .hero-content p {
+    font-size: 14px;
+  }
+
+  .hero-btns {
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .hero-stats {
+    position: static;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px;
+    padding: 20px;
+    background: none;
+    border: none;
+  }
+
+  .hero-stat {
+    flex: 1 1 calc(50% - 12px);
+    text-align: center;
+    min-width: 120px;
+  }
+}
+
+/* ─── CHECK STRIP MOBILE ─── */
+@media (max-width: 768px) {
+  .check-strip {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 16px 20px;
+  }
+}
+
+/* ─── CATÁLOGO MOBILE ─── */
+@media (max-width: 768px) {
+  .catalogo-layout {
+    grid-template-columns: 1fr !important;
+  }
+
+  .catalogo-right {
+    position: static !important;
+    order: -1;
+  }
+
+  .prop-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .prop-card {
+    max-width: 100%;
+  }
+}
+
+/* ─── BUSCAR MOBILE ─── */
+@media (max-width: 768px) {
+  .buscar-wrap {
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  .type-selector {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .filter-grid,
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .buscar-results {
+    grid-template-columns: 1fr;
+  }
+
+  .section {
+    padding: 48px 0;
+  }
+
+  .container {
+    padding: 0 20px;
+  }
+}
+
+/* ─── CADASTRAR PÚBLICO MOBILE ─── */
+@media (max-width: 768px) {
+  .forms-cards-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+    padding: 0 4px;
+  }
+
+  .fcard {
+    padding: 24px 20px;
+  }
+
+  .fcard-title {
+    font-size: 22px;
+  }
+}
+
+/* ─── MODAL CADASTRO MOBILE ─── */
+@media (max-width: 768px) {
+  .iform-overlay {
+    padding: 0;
+    align-items: flex-end;
+  }
+
+  .iform-modal {
+    border-radius: 16px 16px 0 0;
+    max-height: 92vh;
+    overflow-y: auto;
+  }
+
+  .iform-header,
+  .iform-body {
+    padding: 20px 18px;
+  }
+
+  .iform-title {
+    font-size: 22px;
+  }
+
+  .iform-tipo-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .ifgrid,
+  .ifgrid.col3 {
+    grid-template-columns: 1fr;
+  }
+
+  .iform-nav {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .iform-next,
+  .iform-back {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .ipstep {
+    font-size: 8px;
+    padding: 8px 2px;
+  }
+}
+
+/* ─── FOOTER MOBILE ─── */
+@media (max-width: 768px) {
+  .footer-grid {
+    grid-template-columns: 1fr;
+    gap: 28px;
+    padding: 0 20px 28px;
+  }
+
+  .footer-bot {
+    flex-direction: column;
+    gap: 10px;
+    text-align: center;
+    padding: 16px 20px;
+    font-size: 11px;
+  }
+}
+
+/* ─── ADMIN PANEL MOBILE ─── */
+@media (max-width: 768px) {
+  .adm-side {
+    display: none;
+  }
+
+  .adm-main {
+    padding: 16px;
+  }
+
+  .adm-form-grid,
+  .frow {
+    grid-template-columns: 1fr;
+  }
+
+  .adm-table th,
+  .adm-table td {
+    padding: 10px 8px;
+    font-size: 12px;
+  }
+
+  .adm-table .col-hide-mobile {
+    display: none;
+  }
+}
+
+/* ─── MODAL LOGIN / ADMIN FLOW MOBILE ─── */
+@media (max-width: 768px) {
+  .modal-card {
+    width: calc(100% - 32px);
+    padding: 28px 20px;
+    border-radius: 14px;
+  }
+
+  .modal-title {
+    font-size: 22px;
+  }
+}
+
+/* ─── DETALHES DO IMÓVEL MOBILE ─── */
+@media (max-width: 600px) {
+  .det-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .det-modal-card {
+    max-height: 95vh;
+    border-radius: 12px;
+  }
+
+  .det-header {
+    padding: 18px 20px;
+  }
+}
+
+/* ─── UTIL ─── */
+@media (max-width: 768px) {
+  body {
+    overflow-x: hidden;
+  }
+
+  img {
+    max-width: 100%;
+    height: auto;
+  }
+
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+}
