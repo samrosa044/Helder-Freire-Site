@@ -5,18 +5,14 @@
  */
 
 const PARTIALS = [
-  'login.html',           // Tela de login administrativo
-  'modals-topo.html',     // Modais: rejeição, detalhes, imóvel público
-  'nav.html',             // Barra de navegação
-  'hero.html',            // Banner principal
-  'check-strip.html',     // Faixa de selos (Imóveis Verificados, CRECI…)
-  'catalogo.html',        // Grade de imóveis disponíveis
-  'buscar.html',          // Seção "Encontre seu Imóvel"
-  'cadastrar-publico.html', // Seção pública de cadastro de imóvel
-  'footer.html',          // Rodapé
-  'modal-cadastro.html',  // Modal de cadastro (formulário multi-step)
-  'admin-panel.html',     // Painel administrativo completo
-  'modal-login-admin.html', // Modais de login e fluxo admin
+  'login.html',       // Tela de login administrativo
+  'modals-topo.html', // Modais: rejeição, detalhes, imóvel público
+  'nav.html',         // Barra de navegação
+  'hero.html',        // Banner principal
+  'check-strip.html', // Faixa de selos (Imóveis Verificados, CRECI…)
+  'catalogo.html',    // Grade de imóveis disponíveis
+  'footer.html',      // Rodapé
+  'admin-panel.html', // Painel administrativo completo
 ];
 
 (async () => {

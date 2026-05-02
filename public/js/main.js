@@ -31,9 +31,8 @@ function onTsProprietario(token) {
   btn.innerHTML='<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6.5" stroke="var(--navy)"/><path d="M3 7.5L5.5 10.5L11 4" stroke="var(--navy)" stroke-width="1.6" stroke-linecap="round"/></svg> Enviar para Helder Freire';
 }
 function _tsInit() {
-  _tsW.cadastro     = window.turnstile.render('#ts-cadastro',     {sitekey:TS_SITEKEY, callback:onTsCadastro,     execution:'execute', theme:'dark'});
-  _tsW.cliente      = window.turnstile.render('#ts-cliente',      {sitekey:TS_SITEKEY, callback:onTsCliente,      execution:'execute', theme:'dark'});
-  _tsW.proprietario = window.turnstile.render('#ts-proprietario', {sitekey:TS_SITEKEY, callback:onTsProprietario, execution:'execute', theme:'dark'});
+  if (document.querySelector('#ts-cliente'))
+    _tsW.cliente = window.turnstile.render('#ts-cliente', {sitekey:TS_SITEKEY, callback:onTsCliente, execution:'execute', theme:'dark'});
 }
 function _tsExecute(key, btnId, clearFn) {
   clearFn();
@@ -1243,8 +1242,7 @@ function nextStep(prefix, from, to) {
     if (i + 1 === to) s.classList.add('active');
   });
 
-  if (prefix === 'c' && to === 3) _tsExecute('cliente',      'c-submit-btn', () => { tsClienteToken      = null; });
-  if (prefix === 'p' && to === 4) _tsExecute('proprietario', 'p-submit-btn', () => { tsProprietarioToken = null; });
+  if (prefix === 'c' && to === 3) _tsExecute('cliente', 'c-submit-btn', () => { tsClienteToken = null; });
 }
 
 function selTipo(btn, inputId, valor) {
@@ -1431,23 +1429,19 @@ window.addEventListener('scroll', () =>
 );
 
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') { closeCadastroModal(); closeRejectModal(); }
-});
-
-document.getElementById('cadastroModal').addEventListener('click', e => {
-  if (e.target.id === 'cadastroModal') closeCadastroModal();
+  if (e.key === 'Escape') { closeRejectModal(); }
 });
 
 document.getElementById('rejectModal').addEventListener('click', e => {
   if (e.target.id === 'rejectModal') closeRejectModal();
 });
 
-['form-cliente', 'form-proprietario'].forEach(id => {
-  document.getElementById(id).addEventListener('click', function (e) {
-    if (e.target === this) closeForm(this.id.replace('form-', ''));
+const _formCliente = document.getElementById('form-cliente');
+if (_formCliente) {
+  _formCliente.addEventListener('click', function (e) {
+    if (e.target === this) closeForm('cliente');
   });
-});
+}
 
 // ─── Inicialização ────────────────────────────────────────────────
-showPFields('casa');
 renderCatalogo();
