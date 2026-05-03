@@ -11,8 +11,8 @@
     <div class="adm-nav">
       <div class="adm-group">Principal</div>
       <div class="adm-item active" onclick="showAdmTab('dashboard',this)">📊 Dashboard</div>
-      <div class="adm-item" onclick="showAdmTab('pendentes',this)">⏳ Pendentes <span class="adm-badge" id="badge-pendentes">0</span></div>
       <div class="adm-item" onclick="showAdmTab('imoveis',this)">🏘️ Imóveis Ativos</div>
+      <div class="adm-item" onclick="showAdmTab('rascunhos',this)">📝 Rascunhos <span class="adm-badge" id="badge-rascunhos" style="display:none">0</span></div>
       <div class="adm-group">Gestão</div>
       <div class="adm-item" onclick="showAdmTab('cadastrar',this)">➕ Cadastrar Imóvel</div>
       <div class="adm-item" onclick="showAdmTab('leads',this)">📋 Leads / Contatos</div>
@@ -35,9 +35,8 @@
       <div class="adm-tab active" id="tab-dashboard">
         <div class="kpis" id="dash-kpis">
           <div class="kpi"><div class="kpi-lbl">Imóveis Ativos</div><div class="kpi-val" id="kpi-ativos">0</div><div class="kpi-delta">No portfólio</div></div>
-          <div class="kpi"><div class="kpi-lbl">Pendentes</div><div class="kpi-val" id="kpi-pend">0</div><div class="kpi-delta warn">Aguardando revisão</div></div>
+          <div class="kpi"><div class="kpi-lbl">Rascunhos</div><div class="kpi-val" id="kpi-rascunhos">0</div><div class="kpi-delta warn">Não publicados</div></div>
           <div class="kpi"><div class="kpi-lbl">Leads</div><div class="kpi-val" id="kpi-leads">0</div><div class="kpi-delta">Total recebidos</div></div>
-          <div class="kpi"><div class="kpi-lbl">Rejeitados</div><div class="kpi-val" id="kpi-rej">0</div><div class="kpi-delta danger">Necessitam ação</div></div>
         </div>
         <div class="adm-table-wrap">
           <div style="padding:16px 18px;font-size:12px;font-weight:700;color:var(--text);border-bottom:1px solid var(--g200)">Atividade Recente</div>
@@ -45,25 +44,16 @@
         </div>
       </div>
 
-      <!-- TAB: PENDENTES (AUDITORIA) -->
-      <div class="adm-tab" id="tab-pendentes">
-        <div style="margin-bottom:16px;font-size:13px;color:var(--textl)">Cadastros recebidos pelo formulário público. Aprove para publicar o imóvel ou rejeite com um motivo.</div>
-
-        <!-- Abas de status -->
-        <div class="pend-status-tabs" id="pendStatusTabs">
-          <button class="pend-stab active" data-status="pendente" onclick="setPendStatus('pendente',this)">⏳ Pendentes <span class="pend-stab-count" id="cnt-pendente"></span></button>
-          <button class="pend-stab" data-status="aprovado" onclick="setPendStatus('aprovado',this)">✅ Aprovados <span class="pend-stab-count" id="cnt-aprovado"></span></button>
-          <button class="pend-stab" data-status="rejeitado" onclick="setPendStatus('rejeitado',this)">❌ Rejeitados <span class="pend-stab-count" id="cnt-rejeitado"></span></button>
-        </div>
-
-        <div class="adm-filter-bar" style="margin-top:12px">
-          <input class="adm-search" type="text" id="pend-search" placeholder="Buscar por nome, tipo, proprietário..." oninput="renderPendentes()">
-          <select class="adm-select" id="pend-tipo" onchange="renderPendentes()"><option value="">Todos os tipos</option><option>casa</option><option>apartamento</option><option>fazenda</option><option>terreno</option><option>comercial</option><option>aluguel</option></select>
+      <!-- TAB: RASCUNHOS -->
+      <div class="adm-tab" id="tab-rascunhos">
+        <div class="adm-filter-bar">
+          <input class="adm-search" type="text" placeholder="Buscar rascunho..." oninput="renderRascunhos(this.value)">
+          <button class="adm-btn adm-btn-gold" onclick="showAdmTab('cadastrar',null)">+ Novo Imóvel</button>
         </div>
         <div class="adm-table-wrap">
           <table class="adm-table">
-            <thead><tr><th>#</th><th>Tipo</th><th>Nome</th><th>WhatsApp</th><th>Local</th><th>Valor</th><th>Data</th><th>Ações</th></tr></thead>
-            <tbody id="pendentes-tbody"></tbody>
+            <thead><tr><th>#</th><th>Tipo</th><th>Nome/Endereço</th><th>Valor</th><th>Cidade</th><th>Ações</th></tr></thead>
+            <tbody id="rascunhos-tbody"></tbody>
           </table>
         </div>
       </div>
@@ -111,8 +101,21 @@
             <div class="adm-fg"><label>Modalidade</label><select id="adm-modal"><option>Venda</option><option>Locação</option><option>Arrendamento</option><option>Venda e Locação</option></select></div>
           </div>
           <div class="adm-fg"><label>Descrição Completa</label><textarea id="adm-desc" placeholder="Descreva o imóvel com todos os detalhes..."></textarea></div>
+          <!-- UPLOAD DE FOTOS -->
+          <div style="border:2px dashed #e2e8f0;border-radius:10px;padding:16px;margin-bottom:16px">
+            <div style="font-size:11px;font-weight:700;color:var(--textl);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">📸 Fotos do Imóvel</div>
+            <label style="display:flex;align-items:center;gap:10px;background:var(--g100);border:1.5px solid var(--g200);border-radius:8px;padding:10px 14px;cursor:pointer;font-size:13px;color:var(--textl);margin-bottom:8px">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              Selecionar fotos (JPG, PNG, JPEG) — pode selecionar várias
+              <input type="file" id="adm-file-input" accept=".jpg,.jpeg,.png,image/jpeg,image/png" multiple onchange="admFotosAdicionarArquivo(this)" style="display:none">
+            </label>
+            <div style="font-size:10px;color:#94a3b8;margin-bottom:10px">As fotos são comprimidas e armazenadas diretamente no site.</div>
+            <div id="adm-fotos-grid" style="display:flex;gap:10px;flex-wrap:wrap;min-height:40px">
+              <span style="font-size:12px;color:#94a3b8">Nenhuma foto ainda</span>
+            </div>
+            <input type="hidden" id="adm-fotos" value="">
+          </div>
           <div class="adm-form-grid">
-            <div class="adm-fg"><label>Link das Fotos (Drive/Photos)</label><input type="url" id="adm-fotos" placeholder="https://drive.google.com/..."></div>
             <div class="adm-fg"><label>Destaque na Home?</label><select id="adm-destaque"><option>Não</option><option>Sim</option></select></div>
           </div>
           <div style="display:flex;gap:10px;margin-top:8px">
@@ -147,12 +150,9 @@
         <div class="adm-form-card">
           <div class="adm-form-title">Configurações do Site</div>
           <div class="adm-form-grid">
-            <div class="adm-fg"><label>Nome do Corretor</label><input type="text" value="Helder Freire"></div>
-            <div class="adm-fg"><label>CRECI</label><input type="text" value="CRECI-MG 62010"></div>
-            <div class="adm-fg"><label>WhatsApp (link)</label><input type="text" value="https://wa.me/qr/XGTDJPC5WY2QM1"></div>
-            <div class="adm-fg"><label>Cidade</label><input type="text" value="Passos — Minas Gerais"></div>
-            <div class="adm-fg"><label>E-mail</label><input type="email" placeholder="contato@helderfreire.com.br"></div>
-            <div class="adm-fg"><label>Instagram</label><input type="text" placeholder="@helderfreireimóveis"></div>
+            <div class="adm-fg"><label>WhatsApp (link completo)</label><input type="text" id="config-wa" placeholder="https://wa.me/qr/..." value="https://wa.me/qr/XGTDJPC5WY2QM1"></div>
+            <div class="adm-fg"><label>E-mail</label><input type="email" id="config-email" placeholder="contato@helderfreire.com.br"></div>
+            <div class="adm-fg"><label>Instagram</label><input type="text" id="config-instagram" placeholder="@helderfreire"></div>
           </div>
           <div class="adm-fg"><label>Alterar Senha do Admin</label><input type="password" placeholder="Nova senha (deixe em branco para não alterar)" id="new-pass"></div>
           <div style="display:flex;gap:10px;margin-top:8px">
@@ -272,7 +272,7 @@
         <div style="font-size:13px;color:rgba(255,255,255,.5);max-width:340px;line-height:1.8;margin-bottom:8px">Helder Freire recebeu sua solicitação e entrará em contato pelo WhatsApp em breve.</div>
         <div id="c-sheets-note" style="font-size:11px;color:rgba(255,255,255,.3);margin-bottom:24px"></div>
         <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center">
-          <a href="https://wa.me/qr/XGTDJPC5WY2QM1" target="_blank" class="wa-big-btn" style="font-size:12px;padding:12px 20px">
+          <a href="https://wa.me/qr/XGTDJPC5WY2QM1" target="_blank" class="wa-big-btn site-wa-link" style="font-size:12px;padding:12px 20px">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
             Falar no WhatsApp
           </a>

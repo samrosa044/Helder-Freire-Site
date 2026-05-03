@@ -15,23 +15,23 @@ export async function onRequestGet({ request, env }) {
   try {
     // ─ KPIs do dashboard ──────────────────────────
     if (kpis) {
-      const [ativos, pendentes, leads, rejeitados] = await Promise.all([
-        env.DB.prepare(`SELECT COUNT(*) as n FROM imoveis WHERE status = 'ativo'`).first(),
-        env.DB.prepare(`SELECT COUNT(*) as n FROM pendentes WHERE status = 'pendente'`).first(),
-        env.DB.prepare(`SELECT COUNT(*) as n FROM leads`).first(),
-        env.DB.prepare(`SELECT COUNT(*) as n FROM pendentes WHERE status = 'rejeitado'`).first(),
+      const DB = env.DB || env.helder_freire_imoveis;
+      const [ativos, rascunhos, leads] = await Promise.all([
+        DB.prepare(`SELECT COUNT(*) as n FROM imoveis WHERE status = 'ativo'`).first(),
+        DB.prepare(`SELECT COUNT(*) as n FROM imoveis WHERE status = 'rascunho'`).first(),
+        DB.prepare(`SELECT COUNT(*) as n FROM leads`).first(),
       ]);
 
       return json({
-        imoveis_ativos:   ativos?.n    || 0,
-        pendentes:        pendentes?.n || 0,
-        leads:            leads?.n     || 0,
-        rejeitados:       rejeitados?.n || 0,
+        imoveis_ativos: ativos?.n    || 0,
+        rascunhos:      rascunhos?.n || 0,
+        leads:          leads?.n     || 0,
       });
     }
 
     // ─ Log de auditoria ───────────────────────────
-    const { results } = await env.DB.prepare(
+    const DB2 = env.DB || env.helder_freire_imoveis;
+    const { results } = await DB2.prepare(
       `SELECT * FROM auditoria ORDER BY criado_em DESC LIMIT 50`
     ).all();
 
