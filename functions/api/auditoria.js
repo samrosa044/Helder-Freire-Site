@@ -16,10 +16,10 @@ export async function onRequestGet({ request, env }) {
     // ─ KPIs do dashboard ──────────────────────────
     if (kpis) {
       const [ativos, pendentes, leads, rejeitados] = await Promise.all([
-        env.DB.prepare(`SELECT COUNT(*) as n FROM imoveis WHERE status = 'ativo'`).first(),
-        env.DB.prepare(`SELECT COUNT(*) as n FROM pendentes WHERE status = 'pendente'`).first(),
-        env.DB.prepare(`SELECT COUNT(*) as n FROM leads`).first(),
-        env.DB.prepare(`SELECT COUNT(*) as n FROM pendentes WHERE status = 'rejeitado'`).first(),
+        ( env.DB || env.helder_freire_imoveis ).prepare(`SELECT COUNT(*) as n FROM imoveis WHERE status = 'ativo'`).first(),
+        ( env.DB || env.helder_freire_imoveis ).prepare(`SELECT COUNT(*) as n FROM pendentes WHERE status = 'pendente'`).first(),
+        ( env.DB || env.helder_freire_imoveis ).prepare(`SELECT COUNT(*) as n FROM leads`).first(),
+        ( env.DB || env.helder_freire_imoveis ).prepare(`SELECT COUNT(*) as n FROM pendentes WHERE status = 'rejeitado'`).first(),
       ]);
 
       return json({
@@ -31,7 +31,7 @@ export async function onRequestGet({ request, env }) {
     }
 
     // ─ Log de auditoria ───────────────────────────
-    const { results } = await env.DB.prepare(
+    const { results } = await ( env.DB || env.helder_freire_imoveis ).prepare(
       `SELECT * FROM auditoria ORDER BY criado_em DESC LIMIT 50`
     ).all();
 
