@@ -93,32 +93,6 @@ const API = {
 const TYPE_ICONS  = { casa:'🏠', apartamento:'🏢', fazenda:'🌾', terreno:'📐', comercial:'🏪', aluguel:'🔑' };
 const TYPE_LABELS = { casa:'Casa', apartamento:'Apartamento', fazenda:'Fazenda/Sítio', terreno:'Terreno', comercial:'Comercial', aluguel:'Aluguel' };
 
-// ─── Config dinâmica do site ──────────────────────────────────────
-window.SITE_WA = 'https://wa.me/qr/XGTDJPC5WY2QM1'; // fallback
-
-async function loadSiteConfig() {
-  try {
-    const cfg = await API.get('/config');
-    if (cfg.whatsapp) {
-      window.SITE_WA = cfg.whatsapp;
-      updateAllWALinks(cfg.whatsapp);
-    }
-    // Preenche campos do config admin se estiver logado
-    const waEl = document.getElementById('config-wa');
-    const emEl = document.getElementById('config-email');
-    const igEl = document.getElementById('config-instagram');
-    if (waEl) waEl.value = cfg.whatsapp || '';
-    if (emEl) emEl.value = cfg.email    || '';
-    if (igEl) igEl.value = cfg.instagram|| '';
-  } catch (_) {}
-}
-
-function updateAllWALinks(waUrl) {
-  document.querySelectorAll('.site-wa-link').forEach(el => {
-    el.href = waUrl;
-  });
-}
-
 // ─── Catálogo Público ────────────────────────────────────────────
 async function renderCatalogo(filtro = 'todos') {
   const grid = document.getElementById('propGrid');
@@ -226,7 +200,7 @@ async function submitCadastro() {
     document.getElementById('cadastroBody').style.display = 'none';
     document.getElementById('cadastroSuccess').classList.add('show');
 
-    if (API.token()) { updateKPIs(); loadSiteConfig(); }
+    if (API.token()) { updateKPIs(); renderPendentes(); }
   } catch (e) {
     alert('Erro ao enviar: ' + e.message);
     btn.textContent = 'Enviar Cadastro para Análise';
@@ -272,7 +246,7 @@ function closeLoginAndAdmin() {
 async function openAdminPanel() {
   document.getElementById('adminPanel').classList.add('open');
   document.body.style.overflow = 'hidden';
-  await Promise.all([updateKPIs(), renderRascunhos(), renderImoveis(), renderAudit()]);
+  await Promise.all([updateKPIs(), renderPendentes(), renderImoveis(), renderAudit()]);
 }
 
 function closeAdmin() {
@@ -287,7 +261,7 @@ function admLogout() {
 }
 
 const ADM_TITLES = {
-  dashboard: 'Dashboard', rascunhos: 'Rascunhos',
+  dashboard: 'Dashboard', pendentes: 'Imóveis Pendentes',
   imoveis: 'Imóveis Ativos', cadastrar: 'Cadastrar Imóvel',
   leads: 'Leads / Contatos', auditoria: 'Auditoria Completa', config: 'Configurações'
 };
@@ -300,7 +274,7 @@ function showAdmTab(tab, el) {
     document.querySelectorAll('.adm-item').forEach(i => i.classList.remove('active'));
     el.classList.add('active');
   }
-  if (tab === 'rascunhos') renderRascunhos();
+  if (tab === 'pendentes') renderPendentes();
   if (tab === 'imoveis')   renderImoveis();
   if (tab === 'leads')     renderLeads();
   if (tab === 'auditoria') renderAudit();
@@ -310,68 +284,138 @@ function showAdmTab(tab, el) {
 async function updateKPIs() {
   try {
     const kpis = await API.get('/auditoria?kpis=1', true);
-    document.getElementById('kpi-ativos').textContent     = kpis.imoveis_ativos;
-    const rEl = document.getElementById('kpi-rascunhos');
-    if (rEl) rEl.textContent = kpis.rascunhos || 0;
-    document.getElementById('kpi-leads').textContent      = kpis.leads;
-    const badge = document.getElementById('badge-rascunhos');
+    document.getElementById('kpi-ativos').textContent  = kpis.imoveis_ativos;
+    document.getElementById('kpi-pend').textContent    = kpis.pendentes;
+    document.getElementById('kpi-leads').textContent   = kpis.leads;
+    document.getElementById('kpi-rej').textContent     = kpis.rejeitados;
+    const badge = document.getElementById('badge-pendentes');
     if (badge) {
-      badge.textContent   = kpis.rascunhos || 0;
-      badge.style.display = (kpis.rascunhos || 0) > 0 ? 'inline' : 'none';
+      badge.textContent    = kpis.pendentes;
+      badge.style.display  = kpis.pendentes > 0 ? 'inline' : 'none';
     }
   } catch {}
 }
 
-// ─── Rascunhos ───────────────────────────────────────────────────
-async function renderRascunhos(busca = '') {
-  const tb = document.getElementById('rascunhos-tbody');
-  if (!tb) return;
-  tb.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:20px">⏳ Carregando...</td></tr>';
+// ─── Pendentes ────────────────────────────────────────────────────
+let currentPendStatus = 'pendente';
+
+function setPendStatus(status, btn) {
+  currentPendStatus = status;
+  document.querySelectorAll('.pend-stab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderPendentes();
+}
+
+async function renderPendentes() {
+  const tb    = document.getElementById('pendentes-tbody');
+  const busca = (document.getElementById('pend-search')?.value || '').toLowerCase();
+  const tipo  = document.getElementById('pend-tipo')?.value || '';
+  const status = currentPendStatus;
+
+  tb.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:20px">⏳ Carregando...</td></tr>';
 
   try {
-    let lista = await API.get('/imoveis?all=1', true);
-    lista = lista.filter(i => i.status === 'rascunho');
-    if (busca) lista = lista.filter(i =>
-      (i.titulo || '').toLowerCase().includes(busca.toLowerCase()) ||
-      (i.tipo   || '').toLowerCase().includes(busca.toLowerCase())
+    let lista = await API.get('/pendentes?status=' + status, true);
+
+    if (busca) lista = lista.filter(p =>
+      (p.nome       || '').toLowerCase().includes(busca) ||
+      (p.tipo_imovel|| '').toLowerCase().includes(busca) ||
+      (p.endereco   || '').toLowerCase().includes(busca)
     );
+    if (tipo) lista = lista.filter(p => p.tipo_imovel === tipo);
+
+    // Atualiza contadores nas abas
+    ['pendente','aprovado','rejeitado'].forEach(async s => {
+      try {
+        const all = await API.get('/pendentes?status=' + s, true);
+        const el  = document.getElementById('cnt-' + s);
+        if (el) el.textContent = all.length ? `(${all.length})` : '';
+      } catch {}
+    });
+
+    const emptyMsg = {
+      pendente:  'Nenhum cadastro pendente no momento 🎉',
+      aprovado:  'Nenhum cadastro aprovado ainda.',
+      rejeitado: 'Nenhum cadastro rejeitado.',
+    };
 
     if (!lista.length) {
-      tb.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--textl)">Nenhum rascunho salvo ainda</td></tr>';
+      tb.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--textl)">${emptyMsg[status] || 'Nenhum resultado.'}</td></tr>`;
       return;
     }
 
-    tb.innerHTML = lista.map(im => {
-      const numId  = '#' + String(im.id).padStart(4,'0');
-      const imJson = JSON.stringify(im).replace(/'/g,"&#39;");
+    tb.innerHTML = lista.map(p => {
+      const numId     = '#' + String(p.id).padStart(4,'0');
+      const tipoLabel = `${TYPE_ICONS[p.tipo_imovel] || '🏠'} ${TYPE_LABELS[p.tipo_imovel] || p.tipo_imovel}`;
+      const wa        = `<a href="https://wa.me/55${(p.whatsapp||'').replace(/\D/g,'')}" target="_blank" style="color:var(--green)">${p.whatsapp}</a>`;
+      const data      = new Date(p.criado_em).toLocaleDateString('pt-BR');
+      const valor     = p.valor ? 'R$ ' + p.valor : '-';
+      const local     = p.endereco || p.cidade || '-';
+      const pJson     = JSON.stringify(p).replace(/</g,'\u003c').replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+
+      let acoes = '';
+      if (status === 'pendente') {
+        acoes = `
+          <button class="act-btn act-approve" onclick="aprovar(${p.id})">✓ Aprovar</button>
+          <button class="act-btn act-reject"  onclick="openReject(${p.id})">✗ Rejeitar</button>
+          <button class="act-btn act-delete"  onclick="delPendente(${p.id})" style="font-size:10px;padding:4px 7px">🗑</button>`;
+      } else if (status === 'aprovado') {
+        acoes = `<span style="color:var(--green);font-size:12px;font-weight:600">✅ Aprovado</span>
+          <br><button class="act-btn act-reject" style="margin-top:4px;font-size:10px" onclick="openReject(${p.id})">Rejeitar</button>
+          <button class="act-btn act-delete" style="margin-top:4px;font-size:10px;padding:4px 7px" onclick="delPendente(${p.id})">🗑</button>`;
+      } else if (status === 'rejeitado') {
+        const motivo = p.motivo_rejeicao ? `<br><span style="font-size:10px;color:var(--textl)">Motivo: ${p.motivo_rejeicao}</span>` : '';
+        acoes = `<span style="color:var(--red);font-size:12px;font-weight:600">❌ Rejeitado</span>${motivo}
+          <br><button class="act-btn act-approve" style="margin-top:4px;font-size:10px" onclick="aprovar(${p.id})">Aprovar</button>
+          <button class="act-btn act-delete" style="margin-top:4px;font-size:10px;padding:4px 7px" onclick="delPendente(${p.id})">🗑</button>`;
+      }
+
       return `
-      <tr>
-        <td><button onclick='openDetalhes(${imJson})' style="background:var(--navy);color:var(--gold);border:none;cursor:pointer;font-size:11px;font-weight:700;padding:3px 8px;border-radius:5px;font-family:inherit">${numId}</button></td>
-        <td>${TYPE_ICONS[im.tipo] || '🏠'} ${TYPE_LABELS[im.tipo] || im.tipo}</td>
-        <td><strong>${im.titulo}</strong></td>
-        <td style="color:var(--navy-light);font-weight:600">R$ ${im.valor}</td>
-        <td>${im.cidade}</td>
-        <td style="white-space:nowrap;display:flex;gap:4px;flex-wrap:wrap">
-          <button class="act-btn act-approve" onclick="publicarRascunho(${im.id})">✓ Publicar</button>
-          <button class="act-btn act-edit" onclick='abrirEditarImovel(${imJson})'>✏️ Editar</button>
-          <button class="act-btn act-reject" onclick="delImovel(${im.id})" style="font-size:10px">🗑</button>
-        </td>
-      </tr>`;
+        <tr>
+          <td><button onclick='openDetalhes(${JSON.stringify(p).replace(/'/g,"&#39;")})' style="background:var(--navy);color:var(--gold);border:none;cursor:pointer;font-size:11px;font-weight:700;padding:3px 8px;border-radius:5px;font-family:inherit">${numId}</button></td>
+          <td>${tipoLabel}${p.formulario==='cliente'?'<br><small style="color:var(--textl)">👤 Cliente</small>':'<br><small style="color:var(--textl)">🏠 Proprietário</small>'}</td>
+          <td><strong>${p.nome}</strong></td>
+          <td>${wa}</td>
+          <td>${local}</td>
+          <td>${valor}</td>
+          <td style="white-space:nowrap">${data}</td>
+          <td style="white-space:nowrap">${acoes}</td>
+        </tr>`;
     }).join('');
   } catch (e) {
-    tb.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--red)">Erro ao carregar.</td></tr>';
+    tb.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--red)">Erro ao carregar. Tente novamente.</td></tr>';
   }
 }
 
-async function publicarRascunho(id) {
-  if (!confirm('Publicar este rascunho? Ele ficará visível no site.')) return;
+async function aprovar(id) {
+  if (!confirm('Aprovar e publicar este imóvel?')) return;
   try {
-    const lista = await API.get('/imoveis?all=1', true);
-    const im = lista.find(i => i.id === id);
-    if (!im) return;
-    await API.put('/imoveis', { ...im, status: 'ativo' });
-    await Promise.all([updateKPIs(), renderRascunhos(), renderImoveis(), renderCatalogo()]);
-  } catch (e) { alert('Erro: ' + e.message); }
+    await API.post('/pendentes?acao=aprovar', { id }, true);
+    await Promise.all([updateKPIs(), renderPendentes(), renderImoveis(), renderCatalogo()]);
+  } catch (e) { alert('Erro ao aprovar: ' + e.message); }
+}
+
+// ─── Rejeitar ─────────────────────────────────────────────────────
+let rejectId = null;
+
+function openReject(id) {
+  rejectId = id;
+  document.getElementById('rejectModal').classList.add('open');
+}
+function closeRejectModal() {
+  document.getElementById('rejectModal').classList.remove('open');
+  document.getElementById('rejectReason').value = '';
+  rejectId = null;
+}
+
+async function confirmReject() {
+  if (!rejectId) return;
+  const motivo = document.getElementById('rejectReason').value.trim();
+  try {
+    await API.post('/pendentes?acao=rejeitar', { id: rejectId, motivo }, true);
+    closeRejectModal();
+    await Promise.all([updateKPIs(), renderPendentes()]);
+  } catch (e) { alert('Erro ao rejeitar: ' + e.message); }
 }
 
 // ─── Imóveis Admin ────────────────────────────────────────────────
@@ -381,7 +425,6 @@ async function renderImoveis(busca = '') {
 
   try {
     let lista = await API.get('/imoveis?all=1', true);
-    lista = lista.filter(i => i.status !== 'rascunho');
     if (busca) lista = lista.filter(i =>
       (i.titulo || '').toLowerCase().includes(busca.toLowerCase()) ||
       (i.tipo   || '').toLowerCase().includes(busca.toLowerCase())
@@ -402,7 +445,7 @@ async function renderImoveis(busca = '') {
         <td><strong>${im.titulo}</strong></td>
         <td style="color:var(--navy-light);font-weight:600">R$ ${im.valor}</td>
         <td>${im.cidade}</td>
-        <td><span class="pill ${im.status === 'ativo' ? 'pill-approved' : 'pill-pending'}">${im.status === 'ativo' ? '✓ Ativo' : im.status === 'rascunho' ? '📝 Rascunho' : 'Inativo'}</span></td>
+        <td><span class="pill ${im.status === 'ativo' ? 'pill-approved' : 'pill-pending'}">${im.status === 'ativo' ? '✓ Ativo' : 'Inativo'}</span></td>
         <td style="white-space:nowrap;display:flex;gap:4px;flex-wrap:wrap">
           <button class="act-btn act-edit"   onclick='abrirEditarImovel(${imJson})'>✏️ Editar</button>
           <button class="act-btn act-reject" onclick="delImovel(${im.id})" style="font-size:10px">🗑</button>
@@ -419,6 +462,14 @@ async function delImovel(id) {
   try {
     await API.delete('/imoveis?id=' + id);
     await Promise.all([renderImoveis(), renderCatalogo(), updateKPIs()]);
+  } catch (e) { alert('Erro: ' + e.message); }
+}
+
+async function delPendente(id) {
+  if (!confirm('Apagar este cadastro permanentemente?')) return;
+  try {
+    await API.delete('/pendentes?id=' + id);
+    await Promise.all([renderPendentes(), updateKPIs()]);
   } catch (e) { alert('Erro: ' + e.message); }
 }
 
@@ -520,7 +571,6 @@ function abrirEditarImovel(im) {
             <label style="font-size:11px;font-weight:600;color:#64748b;display:block;margin-bottom:5px">Status</label>
             <select id="ei-status" style="width:100%;padding:10px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;box-sizing:border-box">
               <option${im.status==='ativo'?' selected':''}>ativo</option>
-              <option${im.status==='rascunho'?' selected':''}>rascunho</option>
               <option${im.status==='inativo'?' selected':''}>inativo</option>
             </select>
           </div>
@@ -614,7 +664,11 @@ async function eiAdicionarFotosArquivo(input) {
 
   const files = Array.from(input.files);
   for (const file of files) {
-    const b64 = await comprimirImagem(file, 1200, 0.75);
+    const b64 = await new Promise(res => {
+      const r = new FileReader();
+      r.onload = e => res(e.target.result);
+      r.readAsDataURL(file);
+    });
 
     // Adiciona preview
     const wrap = document.createElement('div');
@@ -631,102 +685,6 @@ async function eiAdicionarFotosArquivo(input) {
   input.value = ''; // reset input para permitir re-selecionar
 }
 
-  document.getElementById('det-modal').innerHTML = `
-    <div class="det-card" style="max-width:780px;width:100%">
-      <div class="det-card-header">
-        <div style="display:flex;align-items:center;gap:10px">
-          <span style="background:var(--gold);color:var(--navy);font-size:13px;font-weight:800;padding:4px 12px;border-radius:6px">#${String(im.id).padStart(4,'0')}</span>
-          <span style="color:rgba(255,255,255,.85);font-size:14px;font-weight:600">✏️ Editar Imóvel</span>
-        </div>
-        <button onclick="closeDetModal()" style="background:none;border:none;color:rgba(255,255,255,.6);font-size:22px;cursor:pointer">×</button>
-      </div>
-      <div style="overflow-y:auto;max-height:70vh;padding:24px">
-        <input type="hidden" id="ei-id" value="${im.id}">
-
-        <div style="margin-bottom:18px">
-          <div style="font-size:10px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Tipo do Imóvel</div>
-          <div style="display:flex;gap:6px;flex-wrap:wrap">${tiposBtns}</div>
-          <input type="hidden" id="ei-tipo" value="${im.tipo||'casa'}">
-        </div>
-
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
-          <div style="grid-column:1/-1">
-            <label style="font-size:11px;font-weight:600;color:#64748b;display:block;margin-bottom:4px">Título do Anúncio *</label>
-            <input id="ei-titulo" value="${(im.titulo||'').replace(/"/g,'&quot;')}" style="width:100%;padding:9px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;box-sizing:border-box">
-          </div>
-          <div>
-            <label style="font-size:11px;font-weight:600;color:#64748b;display:block;margin-bottom:4px">Endereço / Localização *</label>
-            <input id="ei-endereco" value="${(im.endereco||'').replace(/"/g,'&quot;')}" style="width:100%;padding:9px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;box-sizing:border-box">
-          </div>
-          <div>
-            <label style="font-size:11px;font-weight:600;color:#64748b;display:block;margin-bottom:4px">Cidade</label>
-            <input id="ei-cidade" value="${(im.cidade||'Passos').replace(/"/g,'&quot;')}" style="width:100%;padding:9px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;box-sizing:border-box">
-          </div>
-          <div>
-            <label style="font-size:11px;font-weight:600;color:#64748b;display:block;margin-bottom:4px">Valor (R$) *</label>
-            <input id="ei-valor" value="${(im.valor||'').replace(/"/g,'&quot;')}" style="width:100%;padding:9px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;box-sizing:border-box">
-          </div>
-          <div>
-            <label style="font-size:11px;font-weight:600;color:#64748b;display:block;margin-bottom:4px">Área</label>
-            <input id="ei-area" value="${(im.area||'').replace(/"/g,'&quot;')}" placeholder="Ex: 120 m²" style="width:100%;padding:9px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;box-sizing:border-box">
-          </div>
-          <div>
-            <label style="font-size:11px;font-weight:600;color:#64748b;display:block;margin-bottom:4px">Quartos</label>
-            <select id="ei-quartos" style="width:100%;padding:9px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;box-sizing:border-box">
-              ${['-','1','2','3','4','5+'].map(v=>`<option${im.quartos===v?' selected':''}>${v}</option>`).join('')}
-            </select>
-          </div>
-          <div>
-            <label style="font-size:11px;font-weight:600;color:#64748b;display:block;margin-bottom:4px">Vagas</label>
-            <select id="ei-vagas" style="width:100%;padding:9px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;box-sizing:border-box">
-              ${['-','0','1','2','3','4+'].map(v=>`<option${im.vagas===v?' selected':''}>${v}</option>`).join('')}
-            </select>
-          </div>
-          <div>
-            <label style="font-size:11px;font-weight:600;color:#64748b;display:block;margin-bottom:4px">Modalidade</label>
-            <select id="ei-modal" style="width:100%;padding:9px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;box-sizing:border-box">
-              ${['Venda','Locação','Arrendamento','Venda e Locação'].map(v=>`<option${im.modal===v?' selected':''}>${v}</option>`).join('')}
-            </select>
-          </div>
-          <div>
-            <label style="font-size:11px;font-weight:600;color:#64748b;display:block;margin-bottom:4px">Status</label>
-            <select id="ei-status" style="width:100%;padding:9px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;box-sizing:border-box">
-              <option${im.status==='ativo'?' selected':''}>ativo</option>
-              <option${im.status==='rascunho'?' selected':''}>rascunho</option>
-              <option${im.status==='inativo'?' selected':''}>inativo</option>
-            </select>
-          </div>
-          <div>
-            <label style="font-size:11px;font-weight:600;color:#64748b;display:block;margin-bottom:4px">Destaque na Home?</label>
-            <select id="ei-destaque" style="width:100%;padding:9px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;box-sizing:border-box">
-              <option${im.destaque==='Não'?' selected':''}>Não</option>
-              <option${im.destaque==='Sim'?' selected':''}>Sim</option>
-            </select>
-          </div>
-        </div>
-
-        <div style="margin-bottom:14px">
-          <label style="font-size:11px;font-weight:600;color:#64748b;display:block;margin-bottom:4px">Descrição Completa</label>
-          <textarea id="ei-descricao" rows="4" style="width:100%;padding:9px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;box-sizing:border-box;resize:vertical;font-family:inherit">${im.descricao||''}</textarea>
-        </div>
-
-        <div>
-          <label style="font-size:11px;font-weight:600;color:#64748b;display:block;margin-bottom:4px">
-            📸 Fotos — cole links diretos de imagens separados por vírgula ou quebra de linha
-          </label>
-          <div style="font-size:10px;color:#94a3b8;margin-bottom:6px">Formatos aceitos: links diretos (.jpg/.png) do Drive, Dropbox ou qualquer URL pública de imagem</div>
-          <textarea id="ei-fotos" rows="3" placeholder="https://exemplo.com/foto1.jpg&#10;https://exemplo.com/foto2.jpg" style="width:100%;padding:9px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:12px;box-sizing:border-box;resize:vertical;font-family:monospace">${im.fotos||''}</textarea>
-          <div id="ei-foto-preview" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px"></div>
-          <button type="button" onclick="previewFotos()" style="margin-top:6px;padding:5px 12px;font-size:11px;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:6px;cursor:pointer">🔍 Pré-visualizar fotos</button>
-        </div>
-      </div>
-      <div class="det-card-footer">
-        <button class="act-btn act-approve" onclick="salvarEdicaoImovel()" style="padding:10px 24px;font-size:13px">✓ Salvar Alterações</button>
-        <button class="adm-btn adm-btn-ghost" onclick="closeDetModal()">Cancelar</button>
-      </div>
-    </div>`;
-  document.getElementById('det-modal').style.display = 'flex';
-}
 
 async function salvarEdicaoImovel() {
   const id    = document.getElementById('ei-id').value;
@@ -794,7 +752,7 @@ function abrirModalImovel(im) {
     im.modal                         ? `<div style="text-align:center"><div style="font-size:20px">📋</div><div style="font-size:11px;color:#94a3b8;margin-top:2px">${im.modal}</div></div>` : '',
   ].filter(Boolean).join('');
 
-  const waNum = (window.SITE_WA || 'https://wa.me/qr/XGTDJPC5WY2QM1').replace('https://wa.me/', ''); // link dinâmico do corretor
+  const waNum = 'qr/XGTDJPC5WY2QM1'; // link do WhatsApp do corretor
   const waMsg = encodeURIComponent('Olá, Helder! Tenho interesse no imóvel: '+im.titulo+' — R$ '+im.valor+'. Pode me passar mais informações?');
 
   document.getElementById('pub-modal').innerHTML = `
@@ -817,7 +775,7 @@ function abrirModalImovel(im) {
 
         ${im.descricao ? `<div style="margin-bottom:20px"><div style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Descrição</div><div style="font-size:13px;color:#334155;line-height:1.7">${im.descricao}</div></div>` : ''}
 
-        <a href="https://wa.me/${waNum}?text=${waMsg}" target="_blank" class="site-wa-link"
+        <a href="https://wa.me/${waNum}?text=${waMsg}" target="_blank"
            style="display:flex;align-items:center;justify-content:center;gap:10px;background:#22c55e;color:#fff;padding:14px 24px;border-radius:10px;font-weight:700;font-size:14px;text-decoration:none;transition:.2s">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
           Falar com Helder Freire
@@ -875,119 +833,45 @@ function selectAdmType(tipo, btn) {
   document.getElementById('adm-type').value = tipo;
 }
 
-function admGetFormData(status) {
-  return {
-    tipo:      document.getElementById('adm-type').value          || 'casa',
-    titulo:    document.getElementById('adm-titulo').value.trim(),
-    endereco:  document.getElementById('adm-endereco').value.trim(),
-    cidade:    document.getElementById('adm-cidade').value         || 'Passos',
-    valor:     document.getElementById('adm-valor').value.trim(),
-    area:      document.getElementById('adm-area').value           || '',
-    quartos:   document.getElementById('adm-quartos').value        || '-',
-    vagas:     document.getElementById('adm-vagas').value          || '-',
-    modal:     document.getElementById('adm-modal').value          || 'Venda',
-    descricao: document.getElementById('adm-desc').value           || '',
-    fotos:     document.getElementById('adm-fotos').value          || '',
-    destaque:  document.getElementById('adm-destaque').value       || 'Não',
-    status,
-  };
-}
-
-function admLimparFormulario() {
-  ['adm-titulo','adm-endereco','adm-valor','adm-desc'].forEach(id => {
-    const el = document.getElementById(id); if (el) el.value = '';
-  });
-  document.getElementById('adm-fotos').value = '';
-  document.getElementById('adm-fotos-grid').innerHTML = '<span style="font-size:12px;color:#94a3b8">Nenhuma foto ainda</span>';
-}
-
 async function salvarImovelAdmin() {
-  const d = admGetFormData('ativo');
-  if (!d.titulo || !d.endereco || !d.valor) { alert('Preencha Título, Endereço e Valor'); return; }
+  const titulo   = document.getElementById('adm-titulo').value.trim();
+  const endereco = document.getElementById('adm-endereco').value.trim();
+  const valor    = document.getElementById('adm-valor').value.trim();
+
+  if (!titulo || !endereco || !valor) { alert('Preencha Título, Endereço e Valor'); return; }
 
   const btn = document.querySelector('#tab-cadastrar .adm-btn-gold');
-  btn.textContent = '⏳ Publicando...'; btn.disabled = true;
+  btn.textContent = '⏳ Salvando...';
+  btn.disabled = true;
+
   try {
-    await API.post('/imoveis', d, true);
+    await API.post('/imoveis', {
+      tipo:      admCurrentType,
+      titulo, endereco,
+      cidade:    document.getElementById('adm-cidade').value    || 'Passos',
+      valor,
+      area:      document.getElementById('adm-area').value      || '',
+      quartos:   document.getElementById('adm-quartos').value   || '-',
+      vagas:     document.getElementById('adm-vagas').value     || '-',
+      modal:     document.getElementById('adm-modal').value     || 'Venda',
+      descricao: document.getElementById('adm-desc').value      || '',
+      fotos:     document.getElementById('adm-fotos').value     || '',
+      destaque:  document.getElementById('adm-destaque').value  || 'Não',
+    }, true);
+
     alert('✅ Imóvel publicado com sucesso!');
-    admLimparFormulario();
+    document.getElementById('adm-titulo').value   = '';
+    document.getElementById('adm-endereco').value = '';
+    document.getElementById('adm-valor').value    = '';
+    document.getElementById('adm-desc').value     = '';
+
     await Promise.all([updateKPIs(), renderImoveis(), renderCatalogo()]);
-    showAdmTab('imoveis', document.querySelectorAll('.adm-item')[1]);
+    showAdmTab('imoveis', document.querySelectorAll('.adm-item')[2]);
   } catch (e) {
     alert('Erro ao salvar: ' + e.message);
   } finally {
-    btn.textContent = '✓ Publicar Imóvel'; btn.disabled = false;
-  }
-}
-
-async function salvarRascunho() {
-  const d = admGetFormData('rascunho');
-  if (!d.titulo) { alert('Informe ao menos o Título para salvar o rascunho'); return; }
-
-  const btn = document.querySelector('#tab-cadastrar .adm-btn-ghost');
-  btn.textContent = '⏳ Salvando...'; btn.disabled = true;
-  try {
-    await API.post('/imoveis', d, true);
-    alert('📝 Rascunho salvo! Acesse a aba Rascunhos para publicar depois.');
-    admLimparFormulario();
-    await Promise.all([updateKPIs(), renderRascunhos()]);
-    showAdmTab('rascunhos', document.querySelectorAll('.adm-item')[2]);
-  } catch (e) {
-    alert('Erro ao salvar rascunho: ' + e.message);
-  } finally {
-    btn.textContent = 'Salvar Rascunho'; btn.disabled = false;
-  }
-}
-
-// ─── Upload de Fotos (tab Cadastrar) ─────────────────────────────
-async function comprimirImagem(file, maxWidth = 1200, quality = 0.75) {
-  return new Promise(res => {
-    const reader = new FileReader();
-    reader.onload = e => {
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        let w = img.width, h = img.height;
-        if (w > maxWidth) { h = Math.round(h * maxWidth / w); w = maxWidth; }
-        canvas.width = w; canvas.height = h;
-        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-        res(canvas.toDataURL('image/jpeg', quality));
-      };
-      img.src = e.target.result;
-    };
-    reader.readAsDataURL(file);
-  });
-}
-
-async function admFotosAdicionarArquivo(input) {
-  const grid = document.getElementById('adm-fotos-grid');
-  const hiddenInput = document.getElementById('adm-fotos');
-  const semFoto = grid.querySelector('span');
-  if (semFoto) semFoto.remove();
-
-  for (const file of Array.from(input.files)) {
-    const dataUrl = await comprimirImagem(file, 1200, 0.75);
-    const wrap = document.createElement('div');
-    wrap.style.cssText = 'position:relative;display:inline-block';
-    wrap.innerHTML = \`
-      <img src="\${dataUrl}" data-url="\${dataUrl}" style="height:80px;width:110px;object-fit:cover;border-radius:8px;border:2px solid #e2e8f0">
-      <button type="button" onclick="admFotoRemover(this)" style="position:absolute;top:-6px;right:-6px;background:#dc2626;color:#fff;border:none;border-radius:50%;width:20px;height:20px;font-size:11px;cursor:pointer;line-height:1">×</button>\`;
-    grid.appendChild(wrap);
-    const atual = hiddenInput.value.trim();
-    hiddenInput.value = atual ? atual + '\n' + dataUrl : dataUrl;
-  }
-  input.value = '';
-}
-
-function admFotoRemover(btn) {
-  const wrap = btn.parentNode;
-  const url  = wrap.querySelector('img').dataset.url;
-  wrap.remove();
-  const input = document.getElementById('adm-fotos');
-  const novas = input.value.split(/[\n,]+/).map(u=>u.trim()).filter(u=>u && u!==url);
-  input.value = novas.join('\n');
-  if (!document.querySelector('#adm-fotos-grid img')) {
-    document.getElementById('adm-fotos-grid').innerHTML = '<span style="font-size:12px;color:#94a3b8">Nenhuma foto ainda</span>';
+    btn.textContent = '✓ Publicar Imóvel';
+    btn.disabled = false;
   }
 }
 
@@ -1433,7 +1317,7 @@ function openDetalhes(d) {
         <table class="det-table"><tbody>${rows}</tbody></table>
       </div>
       <div class="det-card-footer">
-
+        ${!isImovel && d.status==='pendente' ? `<button class="act-btn act-approve" onclick="aprovar(${d.id});closeDetModal()">✓ Aprovar</button><button class="act-btn act-reject" onclick="closeDetModal();openReject(${d.id})">✗ Rejeitar</button>` : ''}
         <button class="adm-btn adm-btn-ghost" onclick="closeDetModal()">Fechar</button>
       </div>
     </div>`;
@@ -1450,10 +1334,12 @@ window.addEventListener('scroll', () =>
 );
 
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') { closeDetModal(); fecharModalImovel && fecharModalImovel(); }
+  if (e.key === 'Escape') { closeRejectModal(); }
 });
 
-// rejectModal removido - não há mais sistema de pendentes/rejeição
+document.getElementById('rejectModal').addEventListener('click', e => {
+  if (e.target.id === 'rejectModal') closeRejectModal();
+});
 
 const _formCliente = document.getElementById('form-cliente');
 if (_formCliente) {
@@ -1462,34 +1348,5 @@ if (_formCliente) {
   });
 }
 
-// ─── Configurações do Admin ──────────────────────────────────────
-async function saveConfig() {
-  const wa  = document.getElementById('config-wa')?.value.trim();
-  const em  = document.getElementById('config-email')?.value.trim();
-  const ig  = document.getElementById('config-instagram')?.value.trim();
-  const pwd = document.getElementById('new-pass')?.value.trim();
-
-  const btn = document.querySelector('#tab-config .adm-btn-primary');
-  if (btn) { btn.textContent = '⏳ Salvando...'; btn.disabled = true; }
-
-  try {
-    await API.put('/config', { whatsapp: wa, email: em, instagram: ig, nova_senha: pwd });
-    if (wa) { window.SITE_WA = wa; updateAllWALinks(wa); }
-    alert('✅ Configurações salvas!');
-    if (document.getElementById('new-pass')) document.getElementById('new-pass').value = '';
-  } catch (e) {
-    alert('Erro ao salvar: ' + e.message);
-  } finally {
-    if (btn) { btn.textContent = 'Salvar Configurações'; btn.disabled = false; }
-  }
-}
-
 // ─── Inicialização ────────────────────────────────────────────────
-loadSiteConfig();
 renderCatalogo();
-// Turnstile: se o onload= disparou antes do main.js estar pronto,
-// o stub em index.html guardou __tsPending = true. Re-executa agora.
-if (window.__tsPending && window.turnstile) {
-  window.__tsPending = false;
-  _tsInit();
-}
