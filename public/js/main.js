@@ -93,21 +93,60 @@ const API = {
 const TYPE_ICONS  = { casa:'🏠', apartamento:'🏢', fazenda:'🌾', terreno:'📐', comercial:'🏪', aluguel:'🔑' };
 const TYPE_LABELS = { casa:'Casa', apartamento:'Apartamento', fazenda:'Fazenda/Sítio', terreno:'Terreno', comercial:'Comercial', aluguel:'Aluguel' };
 
-// ─── Catálogo Público ────────────────────────────────────────────
-async function renderCatalogo(filtro = 'todos') {
+// ─── Filtros ativos ──────────────────────────────────────────────
+let _filtrosAtivos = { tipo: 'todos', quartos: 'todos', modal: 'todos', precoMin: '', precoMax: '', areaMin: '' };
+let _carouselTimer = null;
+let _carouselIdx   = 0;
+let _carouselTotal = 0;
+
+async function renderCatalogo(filtro) {
+  // Atualiza o filtro de tipo se fornecido
+  if (filtro !== undefined) _filtrosAtivos.tipo = filtro;
+
   const grid = document.getElementById('propGrid');
+  if (!grid) return;
   grid.innerHTML = '<div class="empty-state"><div>⏳</div><div>Carregando imóveis...</div></div>';
 
   try {
-    const url = filtro !== 'todos' ? `/imoveis?tipo=${filtro}` : '/imoveis';
-    const imoveis = await API.get(url);
+    const url = _filtrosAtivos.tipo !== 'todos' ? `/imoveis?tipo=${_filtrosAtivos.tipo}` : '/imoveis';
+    let imoveis = await API.get(url);
+
+    // Filtros adicionais no frontend
+    const q   = _filtrosAtivos.quartos;
+    const mod = _filtrosAtivos.modal;
+    const pMin = parseFloat((_filtrosAtivos.precoMin || '').replace(/\D/g,'')) || 0;
+    const pMax = parseFloat((_filtrosAtivos.precoMax || '').replace(/\D/g,'')) || Infinity;
+    const aMin = parseFloat((_filtrosAtivos.areaMin  || '').replace(/\D/g,'')) || 0;
+
+    imoveis = imoveis.filter(im => {
+      if (q !== 'todos' && q !== '') {
+        const qNum = parseInt(q);
+        const imQ  = parseInt(im.quartos);
+        if (q === '5+') { if (isNaN(imQ) || imQ < 5) return false; }
+        else { if (isNaN(imQ) || imQ !== qNum) return false; }
+      }
+      if (mod !== 'todos' && mod !== '') {
+        if (im.modal !== mod) return false;
+      }
+      if (pMin > 0 || pMax < Infinity) {
+        const v = parseFloat((im.valor || '').replace(/\./g,'').replace(',','.'));
+        if (!isNaN(v)) { if (v < pMin || v > pMax) return false; }
+      }
+      if (aMin > 0) {
+        const a = parseFloat((im.area || '').replace(/[^0-9,.]/g,'').replace(',','.'));
+        if (!isNaN(a) && a < aMin) return false;
+      }
+      return true;
+    });
 
     if (!imoveis.length) {
-      grid.innerHTML = '<div class="empty-state"><div>🏘️</div><div>Nenhum imóvel nesta categoria.</div></div>';
+      grid.innerHTML = '<div class="empty-state"><div>🏘️</div><div>Nenhum imóvel encontrado com esses filtros.</div></div>';
+      _carouselTotal = 0;
       return;
     }
 
-    grid.innerHTML = imoveis.map(im => {
+    // Renderiza cards para o carousel
+    grid.innerHTML = imoveis.map((im, idx) => {
       const _fotos = (im.fotos||'').split(/[\n,]+/).map(u=>u.trim()).filter(u=>u.length>4);
       const _capa  = _fotos.length
         ? '<img src="'+_fotos[0]+'" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover" onerror="this.style.display=\'none\'">'
@@ -116,7 +155,7 @@ async function renderCatalogo(filtro = 'todos') {
       const _badge = im.modal==='Locação'?'badge-aluguel':im.destaque==='Sim'?'badge-novo':'badge-venda';
       const _label = im.modal==='Locação'?'Aluguel':im.destaque==='Sim'?'✓ Destaque':'Venda';
       return `
-      <div class="pcard" onclick='abrirModalImovel(${_json})' style="cursor:pointer">
+      <div class="pcard carousel-slide" data-idx="${idx}" onclick='abrirModalImovel(${_json})' style="cursor:pointer;display:${idx===0?'flex':'none'}">
         <div class="pcard-img">
           <div class="pcard-img-bg"></div>
           ${_capa}
@@ -142,15 +181,91 @@ async function renderCatalogo(filtro = 'todos') {
         </div>
       </div>`;
     }).join('');
+
+    _carouselTotal = imoveis.length;
+    _carouselIdx   = 0;
+    iniciarCarousel();
   } catch (e) {
     grid.innerHTML = '<div class="empty-state"><div>⚠️</div><div>Erro ao carregar imóveis. Tente recarregar a página.</div></div>';
   }
 }
 
+// ─── Carousel do portfólio ────────────────────────────────────────
+function iniciarCarousel() {
+  clearInterval(_carouselTimer);
+  // Gera os dots
+  const dotsEl = document.getElementById('carousel-dots');
+  if (dotsEl) {
+    dotsEl.innerHTML = Array.from({length:_carouselTotal}, (_,i) =>
+      `<div class="cdot" onclick="carouselGo(${i})" style="width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.3);cursor:pointer;transition:.2s"></div>`
+    ).join('');
+  }
+  _atualizarCarousel();
+  if (_carouselTotal > 1) {
+    _carouselTimer = setInterval(() => carouselNav(1), 4000);
+  }
+}
+
+function _atualizarCarousel() {
+  const slides = document.querySelectorAll('#propGrid .carousel-slide');
+  slides.forEach((s, i) => {
+    s.style.display = i === _carouselIdx ? 'flex' : 'none';
+  });
+  // Atualiza dots
+  document.querySelectorAll('#carousel-dots .cdot').forEach((d, i) => {
+    d.style.background = i === _carouselIdx ? 'var(--gold)' : 'rgba(255,255,255,.3)';
+    d.style.transform  = i === _carouselIdx ? 'scale(1.3)' : 'scale(1)';
+  });
+  // Atualiza contador
+  const cnt = document.getElementById('carousel-counter');
+  if (cnt) cnt.textContent = _carouselTotal > 0 ? `${_carouselIdx + 1} / ${_carouselTotal}` : '';
+}
+
+function carouselNav(dir) {
+  if (_carouselTotal === 0) return;
+  _carouselIdx = (_carouselIdx + dir + _carouselTotal) % _carouselTotal;
+  _atualizarCarousel();
+  // Reinicia timer ao clicar manualmente
+  clearInterval(_carouselTimer);
+  if (_carouselTotal > 1) {
+    _carouselTimer = setInterval(() => carouselNav(1), 4000);
+  }
+}
+
+function carouselGo(idx) {
+  _carouselIdx = idx;
+  _atualizarCarousel();
+  clearInterval(_carouselTimer);
+  if (_carouselTotal > 1) {
+    _carouselTimer = setInterval(() => carouselNav(1), 4000);
+  }
+}
+
 function filterProps(tipo, btn) {
   document.querySelectorAll('.fchip').forEach(c => c.classList.remove('active'));
-  btn.classList.add('active');
+  if (btn) btn.classList.add('active');
   renderCatalogo(tipo);
+}
+
+function aplicarFiltros() {
+  _filtrosAtivos.quartos  = (document.getElementById('filtro-quartos')  || {}).value || 'todos';
+  _filtrosAtivos.modal    = (document.getElementById('filtro-modal')    || {}).value || 'todos';
+  _filtrosAtivos.precoMin = (document.getElementById('filtro-preco-min')|| {}).value || '';
+  _filtrosAtivos.precoMax = (document.getElementById('filtro-preco-max')|| {}).value || '';
+  _filtrosAtivos.areaMin  = (document.getElementById('filtro-area-min') || {}).value || '';
+  renderCatalogo();
+}
+
+function limparFiltros() {
+  _filtrosAtivos = { tipo: 'todos', quartos: 'todos', modal: 'todos', precoMin: '', precoMax: '', areaMin: '' };
+  ['filtro-quartos','filtro-modal','filtro-preco-min','filtro-preco-max','filtro-area-min'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = el.tagName === 'SELECT' ? 'todos' : '';
+  });
+  document.querySelectorAll('.fchip').forEach(c => c.classList.remove('active'));
+  const firstChip = document.querySelector('.fchip');
+  if (firstChip) firstChip.classList.add('active');
+  renderCatalogo('todos');
 }
 
 // ─── Modal de Cadastro Público ───────────────────────────────────
@@ -614,7 +729,7 @@ function abrirEditarImovel(im) {
       </div>
 
       <div class="det-card-footer" style="background:#f8fafc">
-        <button onclick="salvarEdicaoImovel()" style="background:var(--gold);color:var(--navy);border:none;padding:11px 28px;border-radius:8px;font-weight:700;font-size:13px;cursor:pointer">✓ Salvar Alterações</button>
+        <button id="btn-salvar-edicao" onclick="salvarEdicaoImovel()" style="background:var(--gold);color:var(--navy);border:none;padding:11px 28px;border-radius:8px;font-weight:700;font-size:13px;cursor:pointer">✓ Salvar Alterações</button>
         <button class="adm-btn adm-btn-ghost" onclick="closeDetModal()">Cancelar</button>
       </div>
     </div>`;
@@ -693,8 +808,8 @@ async function salvarEdicaoImovel() {
   const valor    = document.getElementById('ei-valor').value.trim();
   if (!titulo || !endereco || !valor) { alert('Preencha Título, Endereço e Valor'); return; }
 
-  const btn = document.querySelector('#det-modal .act-approve');
-  btn.textContent = '⏳ Salvando...'; btn.disabled = true;
+  const btn = document.getElementById('btn-salvar-edicao');
+  if (btn) { btn.textContent = '⏳ Salvando...'; btn.disabled = true; }
 
   try {
     await API.put('/imoveis', {
@@ -716,7 +831,7 @@ async function salvarEdicaoImovel() {
     await Promise.all([renderImoveis(), renderCatalogo(), updateKPIs()]);
   } catch (e) {
     alert('Erro ao salvar: ' + e.message);
-    btn.textContent = '✓ Salvar Alterações'; btn.disabled = false;
+    if (btn) { btn.textContent = '✓ Salvar Alterações'; btn.disabled = false; }
   }
 }
 
@@ -784,9 +899,15 @@ function abrirModalImovel(im) {
     </div>`;
 
   // Guarda fotos no escopo do modal para navegação
-  window._pubFotos = fotosArr;
+  window._pubFotos   = fotosArr;
   window._pubFotoIdx = 0;
   document.getElementById('pub-modal').style.display = 'flex';
+
+  // Auto-play do carousel do modal
+  clearInterval(window._pubCarouselTimer);
+  if (fotosArr.length > 1) {
+    window._pubCarouselTimer = setInterval(() => pubFotoNav(1), 3500);
+  }
 }
 
 function pubFotoNav(dir) {
@@ -794,6 +915,11 @@ function pubFotoNav(dir) {
   if (!fotos.length) return;
   window._pubFotoIdx = (window._pubFotoIdx + dir + fotos.length) % fotos.length;
   pubFotoGo(window._pubFotoIdx);
+  // Reinicia timer ao navegar manualmente
+  clearInterval(window._pubCarouselTimer);
+  if (fotos.length > 1) {
+    window._pubCarouselTimer = setInterval(() => pubFotoNav(1), 3500);
+  }
 }
 
 function pubFotoGo(idx) {
@@ -810,6 +936,7 @@ function pubFotoGo(idx) {
 }
 
 function fecharModalImovel() {
+  clearInterval(window._pubCarouselTimer);
   document.getElementById('pub-modal').style.display = 'none';
 }
 

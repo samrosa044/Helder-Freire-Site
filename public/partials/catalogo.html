@@ -9,8 +9,9 @@
     <!-- layout: cards à esquerda / Helder à direita -->
     <div class="catalogo-layout">
 
-      <!-- coluna esquerda: filtros + grid de imóveis -->
+      <!-- coluna esquerda: filtros + carousel de imóveis -->
       <div class="catalogo-left">
+        <!-- Filtros por tipo -->
         <div class="filter-bar">
           <button class="fchip active" onclick="filterProps('todos',this)">Todos</button>
           <button class="fchip" onclick="filterProps('casa',this)">🏠 Casas</button>
@@ -20,8 +21,68 @@
           <button class="fchip" onclick="filterProps('comercial',this)">🏪 Comercial</button>
           <button class="fchip" onclick="filterProps('aluguel',this)">🔑 Aluguel</button>
         </div>
-        <div class="prop-grid" id="propGrid">
-          <div class="empty-state"><div>🏘️</div><div>Nenhum imóvel cadastrado ainda.<br>Use o painel admin para adicionar imóveis.</div></div>
+
+        <!-- Filtros avançados -->
+        <div class="filtros-avancados" style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:18px;align-items:flex-end">
+          <div style="display:flex;flex-direction:column;gap:4px">
+            <label style="font-size:10px;font-weight:700;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.08em">Quartos</label>
+            <select id="filtro-quartos" onchange="aplicarFiltros()" style="background:rgba(255,255,255,.06);color:#fff;border:1px solid rgba(255,255,255,.15);border-radius:8px;padding:8px 12px;font-size:13px;min-width:120px">
+              <option value="todos">Qualquer</option>
+              <option value="1">1 quarto</option>
+              <option value="2">2 quartos</option>
+              <option value="3">3 quartos</option>
+              <option value="4">4 quartos</option>
+              <option value="5+">5+ quartos</option>
+            </select>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:4px">
+            <label style="font-size:10px;font-weight:700;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.08em">Modalidade</label>
+            <select id="filtro-modal" onchange="aplicarFiltros()" style="background:rgba(255,255,255,.06);color:#fff;border:1px solid rgba(255,255,255,.15);border-radius:8px;padding:8px 12px;font-size:13px;min-width:130px">
+              <option value="todos">Venda e Aluguel</option>
+              <option value="Venda">Venda</option>
+              <option value="Locação">Locação/Aluguel</option>
+              <option value="Arrendamento">Arrendamento</option>
+            </select>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:4px">
+            <label style="font-size:10px;font-weight:700;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.08em">Preço mín. (R$)</label>
+            <input id="filtro-preco-min" type="number" placeholder="0" onchange="aplicarFiltros()" style="background:rgba(255,255,255,.06);color:#fff;border:1px solid rgba(255,255,255,.15);border-radius:8px;padding:8px 12px;font-size:13px;width:120px">
+          </div>
+          <div style="display:flex;flex-direction:column;gap:4px">
+            <label style="font-size:10px;font-weight:700;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.08em">Preço máx. (R$)</label>
+            <input id="filtro-preco-max" type="number" placeholder="Sem limite" onchange="aplicarFiltros()" style="background:rgba(255,255,255,.06);color:#fff;border:1px solid rgba(255,255,255,.15);border-radius:8px;padding:8px 12px;font-size:13px;width:130px">
+          </div>
+          <div style="display:flex;flex-direction:column;gap:4px">
+            <label style="font-size:10px;font-weight:700;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.08em">Área mín. (m²)</label>
+            <input id="filtro-area-min" type="number" placeholder="0" onchange="aplicarFiltros()" style="background:rgba(255,255,255,.06);color:#fff;border:1px solid rgba(255,255,255,.15);border-radius:8px;padding:8px 12px;font-size:13px;width:120px">
+          </div>
+          <button onclick="limparFiltros()" style="background:rgba(255,255,255,.08);color:rgba(255,255,255,.7);border:1px solid rgba(255,255,255,.15);border-radius:8px;padding:8px 14px;font-size:12px;cursor:pointer;align-self:flex-end">✕ Limpar</button>
+        </div>
+
+        <!-- Carousel wrapper -->
+        <div style="position:relative">
+          <!-- Seta esquerda -->
+          <button onclick="carouselNav(-1)" id="carousel-prev"
+            style="position:absolute;left:-18px;top:50%;transform:translateY(-50%);z-index:10;background:rgba(12,36,97,.85);color:#c9a84c;border:2px solid rgba(201,168,76,.4);border-radius:50%;width:42px;height:42px;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.2s;backdrop-filter:blur(4px)">
+            ‹
+          </button>
+
+          <!-- Grid / Carousel -->
+          <div class="prop-grid" id="propGrid">
+            <div class="empty-state"><div>🏘️</div><div>Nenhum imóvel cadastrado ainda.<br>Use o painel admin para adicionar imóveis.</div></div>
+          </div>
+
+          <!-- Seta direita -->
+          <button onclick="carouselNav(1)" id="carousel-next"
+            style="position:absolute;right:-18px;top:50%;transform:translateY(-50%);z-index:10;background:rgba(12,36,97,.85);color:#c9a84c;border:2px solid rgba(201,168,76,.4);border-radius:50%;width:42px;height:42px;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.2s;backdrop-filter:blur(4px)">
+            ›
+          </button>
+        </div>
+
+        <!-- Dots e contador -->
+        <div style="display:flex;align-items:center;justify-content:center;gap:14px;margin-top:18px">
+          <div id="carousel-dots" style="display:flex;gap:7px"></div>
+          <div id="carousel-counter" style="font-size:12px;color:rgba(255,255,255,.4)"></div>
         </div>
       </div>
 
