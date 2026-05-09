@@ -15,6 +15,17 @@ const PARTIALS = [
   'admin-panel.html', // Painel administrativo completo
 ];
 
+// Carrega um script e retorna Promise
+function carregarScript(src) {
+  return new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    script.src = src;
+    script.onload  = resolve;
+    script.onerror = () => reject(new Error('Falha ao carregar: ' + src));
+    document.body.appendChild(script);
+  });
+}
+
 (async () => {
   try {
     // Carrega todos os partials em paralelo
@@ -35,14 +46,12 @@ const PARTIALS = [
     // Injeta tudo no body
     document.body.innerHTML = htmls.join('\n');
 
+    // Carrega upload-fotos.js ANTES de main.js
+    // (main.js chama _fotosObterUrls, _fotosLimpar, etc. definidas em upload-fotos.js)
+    await carregarScript('/js/upload-fotos.js');
+
     // Carrega o script principal APÓS o DOM estar montado
-    await new Promise((resolve, reject) => {
-      const script = document.createElement('script');
-      script.src = '/js/main.js';
-      script.onload = resolve;
-      script.onerror = reject;
-      document.body.appendChild(script);
-    });
+    await carregarScript('/js/main.js');
 
   } catch (err) {
     console.error('[loader] Erro ao montar a página:', err);
