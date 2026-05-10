@@ -337,44 +337,13 @@ function openAdminFlow() {
   document.body.style.overflow = 'hidden';
 }
 
-// ─── Admin Deep Link ─────────────────────────────────────────────
-// Executa logo após openAdminFlow ser definida, antes de qualquer
-// outro código que possa lançar erro e abortar a execução.
-// window.__adminDeepLink é setado pelo loader.js antes de trocar o body.
-(function initAdminDeepLink() {
-  // Verifica flag do loader (caso principal: /#admin no carregamento)
-  const viaFlag = !!window.__adminDeepLink;
-  // Verifica URL diretamente (caso o loader não limpou, ou ?admin=1)
-  const params = new URLSearchParams(window.location.search);
-  const viaUrl = params.get('admin') === '1' || params.get('admin') === 'true';
-  const viaHash = window.location.hash === '#admin';
-
-  if (!viaFlag && !viaUrl && !viaHash) return;
-
-  window.__adminDeepLink = false;
-
-  // Limpa hash da URL para não causar scroll nem re-trigger
-  if (viaHash) {
-    try { history.replaceState(null, '', window.location.pathname + window.location.search); } catch (_) {}
-  }
-
-  const loginScreen = document.getElementById('loginScreen');
-  const adminPanel  = document.getElementById('adminPanel');
-  if (!loginScreen || !adminPanel) {
-    console.warn('[admin] loginScreen ou adminPanel não encontrado no DOM.');
-    return;
-  }
-  openAdminFlow();
-})();
-
-// Listener para quando o hash muda DEPOIS que a página já carregou
-window.addEventListener('hashchange', function() {
+// Listener para /#admin digitado após a página já estar carregada
+window.addEventListener('hashchange', function () {
   if (window.location.hash !== '#admin') return;
-  try { history.replaceState(null, '', window.location.pathname + window.location.search); } catch (_) {}
-  const loginScreen = document.getElementById('loginScreen');
-  const adminPanel  = document.getElementById('adminPanel');
-  if (loginScreen && adminPanel) openAdminFlow();
+  history.replaceState(null, '', window.location.pathname);
+  openAdminFlow();
 });
+
 
 async function doLogin() {
   const usuario = document.getElementById('loginUser').value;
