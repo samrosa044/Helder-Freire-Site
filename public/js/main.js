@@ -1546,17 +1546,21 @@ function closeDetModal() {
 }
 
 // ─── Event Listeners ──────────────────────────────────────────────
-window.addEventListener('scroll', () =>
-  document.getElementById('navbar').classList.toggle('scrolled', scrollY > 10)
-);
+window.addEventListener('scroll', () => {
+  const navbar = document.getElementById('navbar');
+  if (navbar) navbar.classList.toggle('scrolled', scrollY > 10);
+});
 
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') { closeRejectModal(); }
 });
 
-document.getElementById('rejectModal').addEventListener('click', e => {
-  if (e.target.id === 'rejectModal') closeRejectModal();
-});
+const rejectModal = document.getElementById('rejectModal');
+if (rejectModal) {
+  rejectModal.addEventListener('click', e => {
+    if (e.target.id === 'rejectModal') closeRejectModal();
+  });
+}
 
 const _formCliente = document.getElementById('form-cliente');
 if (_formCliente) {
@@ -1565,5 +1569,27 @@ if (_formCliente) {
   });
 }
 
-// ─── Inicialização ────────────────────────────────────────────────
-renderCatalogo();
+
+// ─── Admin Deep Link ──────────────────────────────────────────────
+function shouldOpenAdminFromUrl() {
+  const params = new URLSearchParams(window.location.search);
+  return (
+    params.get('admin') === '1' ||
+    params.get('admin') === 'true' ||
+    window.location.hash === '#admin'
+  );
+}
+
+function initAdminDeepLink() {
+  if (!shouldOpenAdminFromUrl()) return;
+  const loginScreen = document.getElementById('loginScreen');
+  const adminPanel = document.getElementById('adminPanel');
+  if (!loginScreen || !adminPanel) {
+    console.warn('[admin] Elementos do admin ainda não foram encontrados.');
+    return;
+  }
+  openAdminFlow();
+}
+
+window.addEventListener('hashchange', initAdminDeepLink);
+initAdminDeepLink();
