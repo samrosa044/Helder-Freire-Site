@@ -1,0 +1,32 @@
+<!-- ══ SEÇÃO BUSCA ══ -->
+<section class="section section-light" id="buscar">
+  <div class="container">
+    <div class="section-header">
+      <div class="eyebrow"><div class="eyebrow-line-dark"></div><span class="eyebrow-text-dark">Encontre seu imóvel</span></div>
+      <h2 class="sec-title-dark">Escolha como deseja<br>encontrar seu imóvel</h2>
+    </div>
+    <div class="busca-cards">
+      <div class="busca-card" onclick="filterProps('casa');document.getElementById('catalogo').scrollIntoView({behavior:'smooth'})">
+        <div class="busca-card-icon">🏠</div>
+        <div class="busca-card-label">Comprar</div>
+        <p class="busca-card-desc">Veja imóveis disponíveis para venda e encontre a opção ideal para morar ou investir.</p>
+        <span class="busca-card-link">Ver imóveis à venda →</span>
+      </div>
+      <div class="busca-card destaque" onclick="filterProps('aluguel');document.getElementById('catalogo').scrollIntoView({behavior:'smooth'})">
+        <div class="busca-card-icon">🔑</div>
+        <div class="busca-card-label">Alugar</div>
+        <p class="busca-card-desc">Confira imóveis para locação com praticidade, segurança e atendimento direto.</p>
+        <span class="busca-card-link">Ver imóveis para alugar →</span>
+      </div>
+      <div class="busca-card" onclick="filterProps('todos');document.getElementById('catalogo').scrollIntoView({behavior:'smooth'})">
+        <div class="busca-card-icon">🏘️</div>
+        <div class="busca-card-label">Todos os imóveis</div>
+        <p class="busca-card-desc">Navegue pela vitrine completa de imóveis disponíveis em Passos-MG e região.</p>
+        <span class="busca-card-link">Ver todos os imóveis →</span>
+      </div>
+    </div>
+    <div style="text-align:center;margin-top:40px">
+      <a href="#catalogo" class="btn-primary-dark">Ver todos os imóveis</a>
+    </div>
+  </div>
+</section>

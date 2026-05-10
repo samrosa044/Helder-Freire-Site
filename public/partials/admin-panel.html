@@ -13,6 +13,7 @@
       <div class="adm-item active" onclick="showAdmTab('dashboard',this)">📊 Dashboard</div>
       <div class="adm-item" onclick="showAdmTab('imoveis',this)">🏘️ Imóveis Ativos</div>
       <div class="adm-item" onclick="showAdmTab('rascunhos',this)">📝 Rascunhos <span class="adm-badge" id="badge-rascunhos" style="display:none">0</span></div>
+      <div class="adm-item" onclick="showAdmTab('pendentes',this)">⏳ Pendentes <span class="adm-badge" id="badge-pendentes" style="display:none">0</span></div>
       <div class="adm-group">Gestão</div>
       <div class="adm-item" onclick="showAdmTab('cadastrar',this)">➕ Cadastrar Imóvel</div>
       <div class="adm-item" onclick="showAdmTab('leads',this)">📋 Leads / Contatos</div>
@@ -36,6 +37,8 @@
         <div class="kpis" id="dash-kpis">
           <div class="kpi"><div class="kpi-lbl">Imóveis Ativos</div><div class="kpi-val" id="kpi-ativos">0</div><div class="kpi-delta">No portfólio</div></div>
           <div class="kpi"><div class="kpi-lbl">Rascunhos</div><div class="kpi-val" id="kpi-rascunhos">0</div><div class="kpi-delta warn">Não publicados</div></div>
+          <div class="kpi"><div class="kpi-lbl">Pendentes</div><div class="kpi-val" id="kpi-pend">0</div><div class="kpi-delta warn">Aguardando revisão</div></div>
+          <div class="kpi"><div class="kpi-lbl">Rejeitados</div><div class="kpi-val" id="kpi-rej">0</div><div class="kpi-delta">Total rejeitados</div></div>
           <div class="kpi"><div class="kpi-lbl">Leads</div><div class="kpi-val" id="kpi-leads">0</div><div class="kpi-delta">Total recebidos</div></div>
         </div>
         <div class="adm-table-wrap">
@@ -73,6 +76,41 @@
         </div>
       </div>
 
+      <!-- TAB: PENDENTES -->
+      <div class="adm-tab" id="tab-pendentes">
+        <div class="adm-filter-bar">
+          <input class="adm-search" type="text" id="pend-search" placeholder="Buscar por nome, tipo ou endereço..." oninput="renderPendentes()">
+          <select class="adm-select" id="pend-tipo" onchange="renderPendentes()">
+            <option value="">Todos os tipos</option>
+            <option value="casa">Casa</option>
+            <option value="apartamento">Apartamento</option>
+            <option value="fazenda">Fazenda/Sítio</option>
+            <option value="terreno">Terreno</option>
+            <option value="comercial">Comercial</option>
+            <option value="aluguel">Aluguel</option>
+          </select>
+        </div>
+        <div style="display:flex;gap:8px;padding:0 0 12px">
+          <button class="adm-btn pend-stab active" style="font-size:12px;padding:6px 14px" onclick="setPendStatus('pendente',this)">
+            ⏳ Pendentes <span id="cnt-pendente"></span>
+          </button>
+          <button class="adm-btn pend-stab adm-btn-ghost" style="font-size:12px;padding:6px 14px" onclick="setPendStatus('aprovado',this)">
+            ✅ Aprovados <span id="cnt-aprovado"></span>
+          </button>
+          <button class="adm-btn pend-stab adm-btn-ghost" style="font-size:12px;padding:6px 14px" onclick="setPendStatus('rejeitado',this)">
+            ❌ Rejeitados <span id="cnt-rejeitado"></span>
+          </button>
+        </div>
+        <div class="adm-table-wrap">
+          <table class="adm-table">
+            <thead><tr><th>#</th><th>Tipo</th><th>Nome</th><th>WhatsApp</th><th>Localização</th><th>Valor</th><th>Data</th><th>Ações</th></tr></thead>
+            <tbody id="pendentes-tbody">
+              <tr><td colspan="8" style="text-align:center;padding:40px;color:var(--textl)">⏳ Carregando...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
       <!-- TAB: CADASTRAR IMÓVEL (ADMIN) -->
       <div class="adm-tab" id="tab-cadastrar">
         <div class="adm-form-card">
@@ -104,12 +142,19 @@
           <!-- UPLOAD DE FOTOS -->
           <div style="border:2px dashed #e2e8f0;border-radius:10px;padding:16px;margin-bottom:16px">
             <div style="font-size:11px;font-weight:700;color:var(--textl);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">📸 Fotos do Imóvel</div>
-            <label style="display:flex;align-items:center;gap:10px;background:var(--g100);border:1.5px solid var(--g200);border-radius:8px;padding:10px 14px;cursor:pointer;font-size:13px;color:var(--textl);margin-bottom:8px">
+            <label style="display:flex;align-items:center;gap:10px;background:var(--g100);border:1.5px solid var(--g200);border-radius:8px;padding:10px 14px;cursor:pointer;font-size:13px;color:var(--textl);margin-bottom:8px;-webkit-tap-highlight-color:transparent">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-              Selecionar fotos (JPG, PNG, JPEG) — pode selecionar várias
-              <input type="file" id="adm-file-input" accept=".jpg,.jpeg,.png,image/jpeg,image/png" multiple onchange="admFotosAdicionarArquivo(this)" style="display:none">
+              Selecionar fotos — pode selecionar várias
+              <input
+                type="file"
+                id="adm-file-input"
+                accept="image/*"
+                multiple
+                onchange="admFotosAdicionarArquivo(this)"
+                style="display:none"
+                aria-label="Selecionar fotos do imóvel">
             </label>
-            <div style="font-size:10px;color:#94a3b8;margin-bottom:10px">As fotos são comprimidas e armazenadas diretamente no site.</div>
+            <div style="font-size:10px;color:#94a3b8;margin-bottom:10px">JPG, PNG, WEBP, HEIC — múltiplas fotos permitidas. Comprimidas automaticamente.</div>
             <div id="adm-fotos-grid" style="display:flex;gap:10px;flex-wrap:wrap;min-height:40px">
               <span style="font-size:12px;color:#94a3b8">Nenhuma foto ainda</span>
             </div>

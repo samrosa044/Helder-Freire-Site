@@ -390,6 +390,7 @@ function showAdmTab(tab, el) {
     el.classList.add('active');
   }
   if (tab === 'pendentes') renderPendentes();
+  if (tab === 'rascunhos') renderRascunhos();
   if (tab === 'imoveis')   renderImoveis();
   if (tab === 'leads')     renderLeads();
   if (tab === 'auditoria') renderAudit();
@@ -399,14 +400,25 @@ function showAdmTab(tab, el) {
 async function updateKPIs() {
   try {
     const kpis = await API.get('/auditoria?kpis=1', true);
-    document.getElementById('kpi-ativos').textContent  = kpis.imoveis_ativos;
-    document.getElementById('kpi-pend').textContent    = kpis.pendentes;
-    document.getElementById('kpi-leads').textContent   = kpis.leads;
-    document.getElementById('kpi-rej').textContent     = kpis.rejeitados;
+    const elAtivos = document.getElementById('kpi-ativos');
+    const elPend   = document.getElementById('kpi-pend');
+    const elLeads  = document.getElementById('kpi-leads');
+    const elRej    = document.getElementById('kpi-rej');
+    const elRasc   = document.getElementById('kpi-rascunhos');
+    if (elAtivos) elAtivos.textContent = kpis.imoveis_ativos ?? 0;
+    if (elPend)   elPend.textContent   = kpis.pendentes ?? 0;
+    if (elLeads)  elLeads.textContent  = kpis.leads ?? 0;
+    if (elRej)    elRej.textContent    = kpis.rejeitados ?? 0;
+    if (elRasc)   elRasc.textContent   = kpis.rascunhos ?? 0;
     const badge = document.getElementById('badge-pendentes');
     if (badge) {
-      badge.textContent    = kpis.pendentes;
-      badge.style.display  = kpis.pendentes > 0 ? 'inline' : 'none';
+      badge.textContent   = kpis.pendentes ?? 0;
+      badge.style.display = (kpis.pendentes ?? 0) > 0 ? 'inline' : 'none';
+    }
+    const badgeRasc = document.getElementById('badge-rascunhos');
+    if (badgeRasc) {
+      badgeRasc.textContent   = kpis.rascunhos ?? 0;
+      badgeRasc.style.display = (kpis.rascunhos ?? 0) > 0 ? 'inline' : 'none';
     }
   } catch {}
 }
@@ -423,11 +435,12 @@ function setPendStatus(status, btn) {
 
 async function renderPendentes() {
   const tb    = document.getElementById('pendentes-tbody');
+  if (!tb) return; // tab-pendentes ainda não está no DOM
   const busca = (document.getElementById('pend-search')?.value || '').toLowerCase();
   const tipo  = document.getElementById('pend-tipo')?.value || '';
   const status = currentPendStatus;
 
-  tb.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:20px">⏳ Carregando...</td></tr>';
+  tb.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:20px">⏳ Carregando...</td></tr>';
 
   try {
     let lista = await API.get('/pendentes?status=' + status, true);
@@ -455,7 +468,7 @@ async function renderPendentes() {
     };
 
     if (!lista.length) {
-      tb.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--textl)">${emptyMsg[status] || 'Nenhum resultado.'}</td></tr>`;
+      tb.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:40px;color:var(--textl)">${emptyMsg[status] || 'Nenhum resultado.'}</td></tr>`;
       return;
     }
 
@@ -498,7 +511,7 @@ async function renderPendentes() {
         </tr>`;
     }).join('');
   } catch (e) {
-    tb.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--red)">Erro ao carregar. Tente novamente.</td></tr>';
+    tb.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--red)">Erro ao carregar. Tente novamente.</td></tr>';
   }
 }
 
@@ -531,6 +544,87 @@ async function confirmReject() {
     closeRejectModal();
     await Promise.all([updateKPIs(), renderPendentes()]);
   } catch (e) { alert('Erro ao rejeitar: ' + e.message); }
+}
+
+// ─── Rascunhos Admin ──────────────────────────────────────────────
+async function renderRascunhos(busca = '') {
+  const tb = document.getElementById('rascunhos-tbody');
+  if (!tb) return;
+  tb.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:20px">⏳ Carregando...</td></tr>';
+  try {
+    let lista = await API.get('/imoveis?rascunho=1', true);
+    const q = (busca || '').toLowerCase();
+    if (q) lista = lista.filter(im =>
+      (im.titulo   || '').toLowerCase().includes(q) ||
+      (im.endereco || '').toLowerCase().includes(q) ||
+      (im.cidade   || '').toLowerCase().includes(q)
+    );
+    if (!lista.length) {
+      tb.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--textl)">Nenhum rascunho salvo</td></tr>';
+      return;
+    }
+    tb.innerHTML = lista.map(im => {
+      const numId = '#' + String(im.id).padStart(4, '0');
+      const tipo  = `${TYPE_ICONS[im.tipo] || '🏠'} ${TYPE_LABELS[im.tipo] || im.tipo}`;
+      const valor = im.valor ? 'R$ ' + im.valor : '-';
+      return `<tr>
+        <td><span style="background:var(--navy);color:var(--gold);font-size:11px;font-weight:700;padding:3px 8px;border-radius:5px">${numId}</span></td>
+        <td>${tipo}</td>
+        <td><strong>${im.titulo || im.endereco || '-'}</strong></td>
+        <td>${valor}</td>
+        <td>${im.cidade || '-'}</td>
+        <td style="white-space:nowrap">
+          <button class="act-btn act-approve" onclick="abrirEditarImovel(${JSON.stringify(im).replace(/'/g,"&#39;")})">✏️ Editar</button>
+          <button class="act-btn act-delete"  onclick="delImovel(${im.id})" style="font-size:10px;padding:4px 7px">🗑</button>
+        </td>
+      </tr>`;
+    }).join('');
+  } catch (e) {
+    tb.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--red)">Erro ao carregar rascunhos.</td></tr>';
+  }
+}
+
+async function salvarRascunho() {
+  const titulo   = document.getElementById('adm-titulo')?.value.trim();
+  const endereco = document.getElementById('adm-endereco')?.value.trim();
+
+  if (!titulo && !endereco) {
+    alert('Preencha pelo menos o Título ou Endereço para salvar um rascunho.');
+    return;
+  }
+
+  const btn = document.querySelector('#tab-cadastrar .adm-btn-ghost');
+  if (btn) { btn.textContent = '⏳ Salvando...'; btn.disabled = true; }
+
+  try {
+    // Faz upload das fotos pendentes (se houver)
+    const fotoUrls = await _fotosObterUrls('adm');
+
+    await API.post('/imoveis', {
+      tipo:      admCurrentType,
+      titulo:    titulo || '',
+      endereco:  endereco || '',
+      cidade:    document.getElementById('adm-cidade')?.value    || 'Passos',
+      valor:     document.getElementById('adm-valor')?.value     || '',
+      area:      document.getElementById('adm-area')?.value      || '',
+      quartos:   document.getElementById('adm-quartos')?.value   || '-',
+      vagas:     document.getElementById('adm-vagas')?.value     || '-',
+      modal:     document.getElementById('adm-modal')?.value     || 'Venda',
+      descricao: document.getElementById('adm-desc')?.value      || '',
+      fotos:     fotoUrls.join('\n'),
+      destaque:  document.getElementById('adm-destaque')?.value  || 'Não',
+      rascunho:  true,
+    }, true);
+
+    alert('📝 Rascunho salvo com sucesso!');
+    _fotosLimpar('adm');
+    await Promise.all([updateKPIs(), renderRascunhos()]);
+    showAdmTab('rascunhos', null);
+  } catch (e) {
+    alert('Erro ao salvar rascunho: ' + e.message);
+  } finally {
+    if (btn) { btn.textContent = 'Salvar Rascunho'; btn.disabled = false; }
+  }
 }
 
 // ─── Imóveis Admin ────────────────────────────────────────────────
@@ -599,6 +693,9 @@ async function delLead(id) {
 // ─── Modal Editar Imóvel ──────────────────────────────────────────
 function abrirEditarImovel(im) {
   if (typeof im === 'string') im = JSON.parse(im);
+
+  // Reseta estado de fotos pendentes de edições anteriores
+  _fotosInicializarEdicao();
 
   const TIPOS = ['casa','apartamento','fazenda','terreno','comercial','aluguel'];
 
@@ -751,58 +848,16 @@ function eiSelecionarTipo(btn, tipo) {
   btn.style.fontWeight = '700';
 }
 
-function eiRemoverFoto(btn) {
-  const wrap = btn.parentNode;
-  const url  = wrap.querySelector('img').dataset.url;
-  wrap.remove();
-  // Atualiza lista de fotos removendo esta entrada
-  const input = document.getElementById('ei-fotos');
-  try {
-    const lista = JSON.parse(input.dataset.lista||'[]');
-    input.dataset.lista = JSON.stringify(lista.filter(u=>u!==url));
-    // reconstroi o value para envio (apenas URLs http para salvar no banco)
-    input.value = lista.filter(u=>u!==url && (u.startsWith('http')||u.startsWith('data:'))).join('\n');
-  } catch {
-    const novas = input.value.split(/[\n,]+/).map(u=>u.trim()).filter(u=>u && u!==url);
-    input.value = novas.join('\n');
-  }
-  if (!document.querySelector('#ei-fotos-grid img')) {
-    document.getElementById('ei-fotos-grid').innerHTML = '<span style="font-size:12px;color:#94a3b8">Nenhuma foto</span>';
-  }
-}
-
-async function eiAdicionarFotosArquivo(input) {
-  const grid = document.getElementById('ei-fotos-grid');
-  const hiddenInput = document.getElementById('ei-fotos');
-  const semFoto = grid.querySelector('span');
-  if (semFoto) semFoto.remove();
-
-  const files = Array.from(input.files);
-  for (const file of files) {
-    const b64 = await new Promise(res => {
-      const r = new FileReader();
-      r.onload = e => res(e.target.result);
-      r.readAsDataURL(file);
-    });
-
-    // Adiciona preview
-    const wrap = document.createElement('div');
-    wrap.style.cssText = 'position:relative;display:inline-block';
-    wrap.innerHTML = `
-      <img src="${b64}" data-url="${b64}" style="height:80px;width:110px;object-fit:cover;border-radius:8px;border:2px solid #e2e8f0">
-      <button onclick="eiRemoverFoto(this)" style="position:absolute;top:-6px;right:-6px;background:#dc2626;color:#fff;border:none;border-radius:50%;width:20px;height:20px;font-size:11px;cursor:pointer;line-height:1">×</button>`;
-    grid.appendChild(wrap);
-
-    // Adiciona ao campo hidden
-    const atual = hiddenInput.value.trim();
-    hiddenInput.value = atual ? atual + '\n' + b64 : b64;
-  }
-  input.value = ''; // reset input para permitir re-selecionar
-}
+// ── eiRemoverFoto e eiAdicionarFotosArquivo ───────────────────────
+// Implementação real em /js/upload-fotos.js (sistema compartilhado).
+// Estes stubs garantem compatibilidade com código HTML existente
+// que chama as funções pelo nome antigo.
+// Nota: upload-fotos.js já define eiRemoverFoto e eiAdicionarFotosArquivo
+// como wrappers que delegam para _fotoRemover e _fotosAdicionarArquivo.
 
 
 async function salvarEdicaoImovel() {
-  const id    = document.getElementById('ei-id').value;
+  const id       = document.getElementById('ei-id').value;
   const titulo   = document.getElementById('ei-titulo').value.trim();
   const endereco = document.getElementById('ei-endereco').value.trim();
   const valor    = document.getElementById('ei-valor').value.trim();
@@ -812,6 +867,9 @@ async function salvarEdicaoImovel() {
   if (btn) { btn.textContent = '⏳ Salvando...'; btn.disabled = true; }
 
   try {
+    // Obtém URLs finais (existentes + faz upload das novas fotos pendentes)
+    const fotoUrls = await _fotosObterUrls('ei');
+
     await API.put('/imoveis', {
       id:       +id,
       tipo:     document.getElementById('ei-tipo').value,
@@ -823,10 +881,12 @@ async function salvarEdicaoImovel() {
       vagas:    document.getElementById('ei-vagas').value    || '-',
       modal:    document.getElementById('ei-modal').value    || 'Venda',
       descricao:document.getElementById('ei-descricao').value|| '',
-      fotos:    document.getElementById('ei-fotos').value    || '',
+      fotos:    fotoUrls.join('\n'),
       status:   document.getElementById('ei-status').value   || 'ativo',
       destaque: document.getElementById('ei-destaque').value || 'Não',
     }, true);
+
+    _fotosLimpar('ei'); // libera memória e reseta estado
     closeDetModal();
     await Promise.all([renderImoveis(), renderCatalogo(), updateKPIs()]);
   } catch (e) {
@@ -968,10 +1028,12 @@ async function salvarImovelAdmin() {
   if (!titulo || !endereco || !valor) { alert('Preencha Título, Endereço e Valor'); return; }
 
   const btn = document.querySelector('#tab-cadastrar .adm-btn-gold');
-  btn.textContent = '⏳ Salvando...';
-  btn.disabled = true;
+  if (btn) { btn.textContent = '⏳ Salvando...'; btn.disabled = true; }
 
   try {
+    // Obtém URLs finais (faz upload das fotos pendentes para R2)
+    const fotoUrls = await _fotosObterUrls('adm');
+
     await API.post('/imoveis', {
       tipo:      admCurrentType,
       titulo, endereco,
@@ -982,23 +1044,51 @@ async function salvarImovelAdmin() {
       vagas:     document.getElementById('adm-vagas').value     || '-',
       modal:     document.getElementById('adm-modal').value     || 'Venda',
       descricao: document.getElementById('adm-desc').value      || '',
-      fotos:     document.getElementById('adm-fotos').value     || '',
+      fotos:     fotoUrls.join('\n'),
       destaque:  document.getElementById('adm-destaque').value  || 'Não',
     }, true);
 
     alert('✅ Imóvel publicado com sucesso!');
+
+    // Limpa o formulário completamente
     document.getElementById('adm-titulo').value   = '';
     document.getElementById('adm-endereco').value = '';
     document.getElementById('adm-valor').value    = '';
     document.getElementById('adm-desc').value     = '';
+    document.getElementById('adm-area').value     = '';
+    document.getElementById('adm-quartos').value  = '-';
+    document.getElementById('adm-vagas').value    = '-';
+    document.getElementById('adm-modal').value    = 'Venda';
+    document.getElementById('adm-destaque').value = 'Não';
+
+    // Reseta tipo para 'casa'
+    admCurrentType = 'casa';
+    document.getElementById('adm-type').value = 'casa';
+    document.querySelectorAll('#tab-cadastrar .fchip').forEach((b, i) => {
+      if (i === 0) {
+        b.classList.add('active');
+        b.style.background  = 'var(--gold)';
+        b.style.color       = 'var(--navy)';
+        b.style.borderColor = 'var(--gold)';
+        b.style.fontWeight  = '700';
+      } else {
+        b.classList.remove('active');
+        b.style.background  = 'var(--g100)';
+        b.style.color       = 'var(--text)';
+        b.style.borderColor = 'var(--g200)';
+        b.style.fontWeight  = '';
+      }
+    });
+
+    // Limpa estado de fotos (libera memória de blob URLs)
+    _fotosLimpar('adm');
 
     await Promise.all([updateKPIs(), renderImoveis(), renderCatalogo()]);
     showAdmTab('imoveis', document.querySelectorAll('.adm-item')[2]);
   } catch (e) {
     alert('Erro ao salvar: ' + e.message);
   } finally {
-    btn.textContent = '✓ Publicar Imóvel';
-    btn.disabled = false;
+    if (btn) { btn.textContent = '✓ Publicar Imóvel'; btn.disabled = false; }
   }
 }
 

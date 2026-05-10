@@ -1,324 +1,350 @@
 /* ════════════════════════════════════════════
    HELDER FREIRE IMÓVEIS — mobile.css
-   Responsividade para telas até 768px
+   Responsividade completa
    ════════════════════════════════════════════ */
 
-/* ─── NAV MOBILE ─── */
+/* ─── TOP BAR MOBILE ─── */
 @media (max-width: 768px) {
-  nav {
-    padding: 0 20px;
-    height: 64px;
-  }
+  .topbar { display: none; }
+  nav { top: 0 !important; }
+  .hero { margin-top: 64px !important; }
+}
+
+/* ─── NAV MOBILE ─── */
+@media (max-width: 900px) {
+  nav { padding: 0 20px; height: 64px; }
 
   .nav-links {
     display: none;
     position: fixed;
     top: 64px;
-    left: 0;
-    right: 0;
-    background: rgba(12, 36, 97, 0.98);
+    left: 0; right: 0;
+    background: rgba(6,18,46,0.99);
     backdrop-filter: blur(16px);
     flex-direction: column;
-    padding: 20px 24px 28px;
+    padding: 16px 24px 24px;
     gap: 0;
-    border-bottom: 1px solid rgba(201, 168, 76, 0.2);
+    border-bottom: 1px solid rgba(201,168,76,.25);
     z-index: 999;
+    box-shadow: 0 8px 32px rgba(0,0,0,.5);
   }
 
-  .nav-links.open {
-    display: flex;
-  }
+  .nav-links.open { display: flex; }
 
   .nav-links li {
-    border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+    border-bottom: 1px solid rgba(255,255,255,.07);
   }
 
   .nav-links li a {
     display: block;
     padding: 14px 0;
-    font-size: 15px;
-    color: rgba(255, 255, 255, 0.85);
+    font-size: 14px;
+    color: rgba(255,255,255,.85);
     letter-spacing: 1px;
   }
 
-  .nav-hamburger {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-    cursor: pointer;
-    padding: 6px;
-    background: none;
-    border: none;
+  .nav-links li a:hover { color: var(--gold); }
+
+  .nav-wa-mobile {
+    display: block !important;
+    border-bottom: none !important;
+    margin-top: 8px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(201,168,76,.2) !important;
   }
 
-  .nav-hamburger span {
-    display: block;
-    width: 24px;
-    height: 2px;
-    background: var(--gold);
-    border-radius: 2px;
-    transition: all 0.3s;
-  }
-
-  .nav-logo-name {
-    font-size: 16px;
-    letter-spacing: 1.5px;
-  }
-
-  .nav-logo-sub {
-    font-size: 8px;
-    letter-spacing: 2px;
-  }
-}
-
-/* ─── HERO MOBILE ─── */
-@media (max-width: 768px) {
-  .hero-content {
-    padding: 0 20px;
-    text-align: center;
-  }
-
-  .hero-content h1 {
-    font-size: 38px !important;
-    line-height: 1.15;
-  }
-
-  .hero-content p {
-    font-size: 14px;
-  }
-
-  .hero-btns {
-    flex-direction: column;
+  .nav-wa-btn-mobile {
+    display: flex !important;
     align-items: center;
-    gap: 12px;
-  }
-
-  .hero-stats {
-    position: static;
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 12px;
-    padding: 20px;
-    background: none;
-    border: none;
-  }
-
-  .hero-stat {
-    flex: 1 1 calc(50% - 12px);
-    text-align: center;
-    min-width: 120px;
-  }
-}
-
-/* ─── CHECK STRIP MOBILE ─── */
-@media (max-width: 768px) {
-  .check-strip {
-    flex-direction: column;
-    align-items: flex-start;
     gap: 10px;
-    padding: 16px 20px;
-  }
-}
-
-/* ─── CATÁLOGO MOBILE ─── */
-@media (max-width: 768px) {
-  .catalogo-layout {
-    grid-template-columns: 1fr !important;
-  }
-
-  .catalogo-right {
-    position: static !important;
-    order: -1;
-  }
-
-  .prop-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .prop-card {
-    max-width: 100%;
-  }
-}
-
-/* ─── BUSCAR MOBILE ─── */
-@media (max-width: 768px) {
-  .buscar-wrap {
-    flex-direction: column;
-    gap: 24px;
-  }
-
-  .type-selector {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .filter-grid,
-  .form-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .buscar-results {
-    grid-template-columns: 1fr;
-  }
-
-  .section {
-    padding: 48px 0;
-  }
-
-  .container {
-    padding: 0 20px;
-  }
-}
-
-/* ─── CADASTRAR PÚBLICO MOBILE ─── */
-@media (max-width: 768px) {
-  .forms-cards-grid {
-    grid-template-columns: 1fr;
-    gap: 16px;
-    padding: 0 4px;
-  }
-
-  .fcard {
-    padding: 24px 20px;
-  }
-
-  .fcard-title {
-    font-size: 22px;
-  }
-}
-
-/* ─── MODAL CADASTRO MOBILE ─── */
-@media (max-width: 768px) {
-  .iform-overlay {
-    padding: 0;
-    align-items: flex-end;
-  }
-
-  .iform-modal {
-    border-radius: 16px 16px 0 0;
-    max-height: 92vh;
-    overflow-y: auto;
-  }
-
-  .iform-header,
-  .iform-body {
-    padding: 20px 18px;
-  }
-
-  .iform-title {
-    font-size: 22px;
-  }
-
-  .iform-tipo-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .ifgrid,
-  .ifgrid.col3 {
-    grid-template-columns: 1fr;
-  }
-
-  .iform-nav {
-    flex-direction: column;
-    gap: 10px;
-  }
-
-  .iform-next,
-  .iform-back {
+    padding: 12px 18px;
+    background: var(--green);
+    color: white;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 700;
+    text-decoration: none;
+    letter-spacing: .5px;
     width: 100%;
     justify-content: center;
   }
 
-  .ipstep {
-    font-size: 8px;
-    padding: 8px 2px;
-  }
+  .wa-nav-btn { display: none; }
+
+  .nav-hamburger { display: flex; }
+
+  .nav-logo-name { font-size: 16px; letter-spacing: 1px; }
+  .nav-logo-sub { font-size: 8px; letter-spacing: 2px; }
 }
 
-/* ─── FOOTER MOBILE ─── */
+/* ─── HERO MOBILE ─── */
 @media (max-width: 768px) {
-  .footer-grid {
-    grid-template-columns: 1fr;
-    gap: 28px;
-    padding: 0 20px 28px;
+  .hero {
+    margin-top: 64px;
+    padding-bottom: 40px;
+    min-height: calc(100vh - 64px);
   }
 
-  .footer-bot {
+  .hero-content { padding: 0 20px; }
+
+  .hero-title {
+    font-size: 38px !important;
+    line-height: 1.1;
+    letter-spacing: -1px;
+    margin-bottom: 16px;
+  }
+
+  .hero-desc {
+    font-size: 14px;
+    max-width: 100%;
+    margin-bottom: 24px;
+  }
+
+  .hero-actions {
     flex-direction: column;
+    align-items: stretch;
     gap: 10px;
-    text-align: center;
-    padding: 16px 20px;
-    font-size: 11px;
-  }
-}
-
-/* ─── ADMIN PANEL MOBILE ─── */
-@media (max-width: 768px) {
-  .adm-side {
-    display: none;
+    margin-bottom: 24px;
   }
 
-  .adm-main {
-    padding: 16px;
-  }
-
-  .adm-form-grid,
-  .frow {
-    grid-template-columns: 1fr;
-  }
-
-  .adm-table th,
-  .adm-table td {
-    padding: 10px 8px;
+  .btn-primary, .btn-wa-hero {
+    justify-content: center;
+    width: 100%;
+    padding: 14px;
     font-size: 12px;
   }
 
-  .adm-table .col-hide-mobile {
-    display: none;
+  .hero-selos {
+    gap: 12px;
+    padding-top: 18px;
+    flex-wrap: wrap;
   }
+
+  .hero-selo { font-size: 10px; }
+
+  .hero-stats {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    padding: 20px;
+    gap: 0;
+    margin-top: 20px;
+  }
+
+  .hsb { flex: 1; min-width: calc(33% - 10px); padding: 12px 8px; }
+  .hsb-num { font-size: 26px; }
+  .hsb-lbl { font-size: 9px; }
+  .hsb-sep { display: none; }
 }
 
-/* ─── MODAL LOGIN / ADMIN FLOW MOBILE ─── */
+/* ─── CHECK STRIP MOBILE ─── */
 @media (max-width: 768px) {
-  .modal-card {
-    width: calc(100% - 32px);
-    padding: 28px 20px;
-    border-radius: 14px;
+  .check-strip-inner {
+    padding: 0 20px;
+    gap: 12px;
+    justify-content: flex-start;
+    overflow-x: auto;
+    flex-wrap: nowrap;
   }
+  .csi-dot { flex-shrink: 0; }
+  .csi { white-space: nowrap; flex-shrink: 0; }
+}
 
-  .modal-title {
-    font-size: 22px;
+/* ─── SECTION CONTAINER MOBILE ─── */
+@media (max-width: 768px) {
+  .section { padding: 56px 0; }
+  .container { padding: 0 20px; }
+  .section-header { margin-bottom: 36px; }
+  .sec-title { font-size: 30px !important; }
+  .sec-title-dark { font-size: 28px !important; }
+  .sec-sub-dark { font-size: 14px; }
+}
+
+/* ─── BUSCA MOBILE ─── */
+@media (max-width: 768px) {
+  .busca-cards { grid-template-columns: 1fr; gap: 16px; }
+  .busca-card { padding: 24px 20px; }
+  .busca-card-label { font-size: 20px; }
+}
+
+/* ─── CATALOGO MOBILE ─── */
+@media (max-width: 900px) {
+  .catalogo-layout {
+    grid-template-columns: 1fr !important;
+    gap: 24px;
+  }
+  .catalogo-right {
+    position: static !important;
+    order: -1;
+  }
+  .helder-sidebar {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 16px;
+    text-align: left;
+    padding: 18px;
+  }
+  .helder-sidebar-photo-wrap {
+    flex-shrink: 0;
+    width: 72px;
+    height: 72px;
+    margin: 0;
+  }
+  .helder-sidebar-name { font-size: 16px; }
+  .helder-sidebar-text { font-size: 11px; margin-bottom: 10px; }
+  .helder-sidebar-wa { font-size: 11px; padding: 9px 12px; }
+}
+
+@media (max-width: 480px) {
+  .helder-sidebar {
+    flex-direction: column;
+    text-align: center;
+    align-items: center;
+  }
+  .helder-sidebar-photo-wrap { margin: 0 auto 10px; }
+}
+
+/* Filtros avançados mobile */
+@media (max-width: 768px) {
+  .filtros-avancados {
+    gap: 8px !important;
+  }
+  .filtros-avancados select,
+  .filtros-avancados input {
+    min-width: 100px !important;
+    width: 100% !important;
+    font-size: 12px !important;
+  }
+  .filtros-avancados > div {
+    flex: 1 1 calc(50% - 8px);
   }
 }
 
-/* ─── DETALHES DO IMÓVEL MOBILE ─── */
-@media (max-width: 600px) {
-  .det-grid {
+/* ─── SOBRE MOBILE ─── */
+@media (max-width: 900px) {
+  .sobre-layout {
     grid-template-columns: 1fr;
+    gap: 36px;
   }
-
-  .det-modal-card {
-    max-height: 95vh;
-    border-radius: 12px;
-  }
-
-  .det-header {
-    padding: 18px 20px;
-  }
+  .sobre-visual { order: -1; }
+  .sobre-stats-grid { grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  .sobre-stat { padding: 14px 8px; }
+  .sobre-stat-num { font-size: 22px; }
+  .sobre-stat-lbl { font-size: 9px; }
 }
 
-/* ─── UTIL ─── */
+@media (max-width: 600px) {
+  .sobre-stats-grid { grid-template-columns: 1fr 1fr; }
+  .sobre-actions { flex-direction: column; }
+  .sobre-actions .btn-wa-hero { width: 100%; justify-content: center; }
+}
+
+/* ─── ANUNCIE MOBILE ─── */
+@media (max-width: 900px) {
+  .anuncie-grid { grid-template-columns: 1fr; gap: 36px; }
+}
+
+@media (max-width: 600px) {
+  .anuncie-info-items { grid-template-columns: 1fr; }
+  .anuncie-card { padding: 24px 20px; }
+}
+
+/* ─── DIFERENCIAIS MOBILE ─── */
+@media (max-width: 900px) {
+  .dif-grid { grid-template-columns: 1fr 1fr; gap: 16px; }
+}
+
+@media (max-width: 480px) {
+  .dif-grid { grid-template-columns: 1fr; }
+}
+
+/* ─── CONTATO MOBILE ─── */
+@media (max-width: 900px) {
+  .contato-grid { grid-template-columns: 1fr 1fr; gap: 16px; }
+}
+
+@media (max-width: 600px) {
+  .contato-grid { grid-template-columns: 1fr; gap: 12px; }
+  .contato-card { padding: 20px 16px; }
+  .contato-actions { flex-direction: column; align-items: stretch; }
+  .contato-actions a { justify-content: center; text-align: center; }
+}
+
+/* ─── CTA FINAL MOBILE ─── */
 @media (max-width: 768px) {
-  body {
-    overflow-x: hidden;
+  .cta-final-title { font-size: 28px !important; }
+  .cta-final-desc { font-size: 14px; }
+  .cta-final-actions {
+    flex-direction: column;
+    align-items: stretch;
   }
+  .cta-final-actions a { justify-content: center; width: 100%; }
+}
 
-  img {
-    max-width: 100%;
-    height: auto;
-  }
+/* ─── FOOTER MOBILE ─── */
+@media (max-width: 900px) {
+  .footer-grid { grid-template-columns: 1fr 1fr; gap: 28px; }
+}
 
-  * {
-    -webkit-tap-highlight-color: transparent;
-  }
+@media (max-width: 600px) {
+  .footer-grid { grid-template-columns: 1fr; gap: 24px; }
+  .footer-bot-inner { flex-direction: column; gap: 8px; text-align: center; }
+  .f-copy, .f-atend { font-size: 11px; }
+}
+
+/* ─── ADMIN MOBILE ─── */
+@media (max-width: 768px) {
+  .adm-side { display: none; }
+  .adm-main { padding: 0; }
+  .adm-content { padding: 16px; }
+  .adm-topbar { padding: 0 16px; }
+  .adm-form-grid, .frow { grid-template-columns: 1fr; }
+  .adm-table th, .adm-table td { padding: 10px 8px; font-size: 12px; }
+  .kpis { grid-template-columns: 1fr 1fr; }
+}
+
+/* ─── MODAL MOBILE ─── */
+@media (max-width: 768px) {
+  .modal-card { width: calc(100% - 32px); padding: 28px 20px; border-radius: 14px; }
+  .modal-title { font-size: 22px; }
+  .iform-overlay { padding: 0; align-items: flex-end; }
+  .iform-modal { border-radius: 16px 16px 0 0; max-height: 92vh; overflow-y: auto; }
+  .iform-header, .iform-body { padding: 20px 18px; }
+  .iform-title { font-size: 22px; }
+  .iform-tipo-grid { grid-template-columns: repeat(2, 1fr); }
+  .ifgrid, .ifgrid.col3 { grid-template-columns: 1fr; }
+  .iform-nav { flex-direction: column; gap: 10px; }
+  .iform-next, .iform-back { width: 100%; justify-content: center; }
+  .ipstep { font-size: 8px; padding: 8px 2px; }
+  .forms-cards-grid { grid-template-columns: 1fr; gap: 16px; padding: 0 4px; }
+  .fcard { padding: 24px 20px; }
+  .fcard-title { font-size: 22px; }
+}
+
+/* ─── MODAL DETALHES MOBILE ─── */
+@media (max-width: 600px) {
+  .det-grid { grid-template-columns: 1fr; }
+  .det-modal-card { max-height: 95vh; border-radius: 12px; }
+  .det-header { padding: 18px 20px; }
+}
+
+/* ─── FORM GRID MOBILE ─── */
+@media (max-width: 768px) {
+  .form-grid, .form-grid.col3 { grid-template-columns: 1fr; }
+  .type-selector { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* ─── UTILS ─── */
+@media (max-width: 768px) {
+  body { overflow-x: hidden; }
+  img { max-width: 100%; height: auto; }
+  * { -webkit-tap-highlight-color: transparent; }
+}
+
+/* ─── FLOAT WA MOBILE ─── */
+@media (max-width: 480px) {
+  .float-wa { padding: 12px 14px; font-size: 0; border-radius: 50%; width: 52px; height: 52px; justify-content: center; }
+  .float-wa svg { width: 22px; height: 22px; }
+  .float-wa-pulse { display: none; }
 }
