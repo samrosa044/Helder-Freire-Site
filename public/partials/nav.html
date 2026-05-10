@@ -50,36 +50,4 @@
     </button>
   </div>
 </nav>
-
-<script>
-function toggleMenu() {
-  const links = document.getElementById('navLinks');
-  const ham = document.getElementById('navHamburger');
-  links.classList.toggle('open');
-  ham.classList.toggle('open');
-}
-function fechaMenu() {
-  const links = document.getElementById('navLinks');
-  const ham = document.getElementById('navHamburger');
-  links.classList.remove('open');
-  ham.classList.remove('open');
-}
-// fecha menu ao clicar fora
-document.addEventListener('click', function(e) {
-  const nav = document.getElementById('navbar');
-  const links = document.getElementById('navLinks');
-  if (nav && !nav.contains(e.target) && links && links.classList.contains('open')) {
-    fechaMenu();
-  }
-});
-// Scroll: shrink nav
-window.addEventListener('scroll', function() {
-  const nav = document.getElementById('navbar');
-  if (!nav) return;
-  if (window.scrollY > 60) {
-    nav.classList.add('scrolled');
-  } else {
-    nav.classList.remove('scrolled');
-  }
-});
-</script>
+<!-- Funções toggleMenu/fechaMenu definidas em main.js (scripts em innerHTML não executam) -->

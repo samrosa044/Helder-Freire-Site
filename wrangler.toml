@@ -26,8 +26,7 @@ bucket_name = "helder-fotos"
 # Estas são públicas. Segredos vão via: wrangler secret put NOME
 [vars]
 ADMIN_USER = "admin"
-# URL pública do bucket R2 (sem barra final)
-# Obtenha em: Cloudflare Dashboard → R2 → helder-fotos → Settings → Public Access
-R2_PUBLIC_URL = "https://pub-SUBSTITUA_PELO_SEU_ID.r2.dev"
 # ADMIN_PASS  → definir com: wrangler secret put ADMIN_PASS
 # JWT_SECRET  → definir com: wrangler secret put JWT_SECRET
+# Nota: R2_PUBLIC_URL não é mais necessário.
+# As imagens são servidas pelo proxy /r2/[path] no próprio Worker.

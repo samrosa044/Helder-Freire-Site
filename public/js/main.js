@@ -332,16 +332,31 @@ async function submitCadastro() {
 
 // ─── Admin Login ─────────────────────────────────────────────────
 function openAdminFlow() {
-  if (API.token()) { openAdminPanel(); return; }
-  document.getElementById('loginScreen').classList.add('open');
-  document.body.style.overflow = 'hidden';
+  if (API.token()) {
+    // Já autenticado — abre o painel direto
+    console.log('[admin] Token encontrado, abrindo painel...');
+    openAdminPanel();
+    return;
+  }
+  // Sem token — exige login
+  console.log('[admin] Sem token, exibindo tela de login...');
+  const loginScreen = document.getElementById('loginScreen');
+  if (loginScreen) {
+    loginScreen.classList.add('open');
+    document.body.style.overflow = 'hidden';
+    // Foca no campo de usuário para UX imediata
+    setTimeout(() => {
+      const userInput = document.getElementById('loginUser');
+      if (userInput) userInput.focus();
+    }, 150);
+  }
 }
 
 // Listener para /#admin digitado após a página já estar carregada
 window.addEventListener('hashchange', function () {
   if (window.location.hash !== '#admin') return;
   history.replaceState(null, '', window.location.pathname);
-  openAdminFlow();
+  openAdminFlow(); // exige login se não houver token
 });
 
 
@@ -1559,6 +1574,32 @@ function closeDetModal() {
   const m = document.getElementById('det-modal');
   if (m) m.style.display='none';
 }
+
+// ─── Funções do Menu de Navegação ─────────────────────────────────
+// (Definidas aqui porque scripts dentro de innerHTML não são executados
+//  pelo browser — os partials são injetados via loader.js com innerHTML)
+function toggleMenu() {
+  const links = document.getElementById('navLinks');
+  const ham   = document.getElementById('navHamburger');
+  if (links) links.classList.toggle('open');
+  if (ham)   ham.classList.toggle('open');
+}
+
+function fechaMenu() {
+  const links = document.getElementById('navLinks');
+  const ham   = document.getElementById('navHamburger');
+  if (links) links.classList.remove('open');
+  if (ham)   ham.classList.remove('open');
+}
+
+// Fecha menu ao clicar fora
+document.addEventListener('click', function (e) {
+  const nav   = document.getElementById('navbar');
+  const links = document.getElementById('navLinks');
+  if (nav && !nav.contains(e.target) && links && links.classList.contains('open')) {
+    fechaMenu();
+  }
+});
 
 // ─── Event Listeners ──────────────────────────────────────────────
 window.addEventListener('scroll', () => {

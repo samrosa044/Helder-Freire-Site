@@ -64,13 +64,11 @@ export async function onRequestPost({ request, env }) {
     }, 503);
   }
 
-  // 3. URL pública do bucket (configure em wrangler.toml [vars] ou como secret)
-  const baseUrl = (env.R2_PUBLIC_URL || '').replace(/\/$/, '');
-  if (!baseUrl) {
-    return respJson({
-      erro: 'R2_PUBLIC_URL não configurada. Defina a URL pública do bucket nas vars do wrangler.',
-    }, 503);
-  }
+  // 3. URL base para as imagens — usa o proxy /r2/ no próprio Worker
+  //    ex: https://helder-imoveis.pages.dev/r2/imoveis/123-abc.jpg
+  //    Isso elimina a necessidade de configurar URL pública no bucket R2.
+  const origin  = new URL(request.url).origin;
+  const baseUrl = origin + '/r2';
 
   // 4. Lê o multipart/form-data
   let formData;
