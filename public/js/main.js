@@ -34,6 +34,13 @@ function _tsInit() {
   if (document.querySelector('#ts-cliente'))
     _tsW.cliente = window.turnstile.render('#ts-cliente', {sitekey:TS_SITEKEY, callback:onTsCliente, execution:'execute', theme:'dark'});
 }
+// Se o Turnstile disparou o onload= antes do main.js estar pronto,
+// o stub no index.html salvou window.__tsPending = true.
+// Agora que main.js carregou e o DOM está montado, re-executamos.
+if (window.__tsPending) {
+  window.__tsPending = false;
+  _tsInit();
+}
 function _tsExecute(key, btnId, clearFn) {
   clearFn();
   const btn = document.getElementById(btnId);
@@ -329,6 +336,45 @@ function openAdminFlow() {
   document.getElementById('loginScreen').classList.add('open');
   document.body.style.overflow = 'hidden';
 }
+
+// ─── Admin Deep Link ─────────────────────────────────────────────
+// Executa logo após openAdminFlow ser definida, antes de qualquer
+// outro código que possa lançar erro e abortar a execução.
+// window.__adminDeepLink é setado pelo loader.js antes de trocar o body.
+(function initAdminDeepLink() {
+  // Verifica flag do loader (caso principal: /#admin no carregamento)
+  const viaFlag = !!window.__adminDeepLink;
+  // Verifica URL diretamente (caso o loader não limpou, ou ?admin=1)
+  const params = new URLSearchParams(window.location.search);
+  const viaUrl = params.get('admin') === '1' || params.get('admin') === 'true';
+  const viaHash = window.location.hash === '#admin';
+
+  if (!viaFlag && !viaUrl && !viaHash) return;
+
+  window.__adminDeepLink = false;
+
+  // Limpa hash da URL para não causar scroll nem re-trigger
+  if (viaHash) {
+    try { history.replaceState(null, '', window.location.pathname + window.location.search); } catch (_) {}
+  }
+
+  const loginScreen = document.getElementById('loginScreen');
+  const adminPanel  = document.getElementById('adminPanel');
+  if (!loginScreen || !adminPanel) {
+    console.warn('[admin] loginScreen ou adminPanel não encontrado no DOM.');
+    return;
+  }
+  openAdminFlow();
+})();
+
+// Listener para quando o hash muda DEPOIS que a página já carregou
+window.addEventListener('hashchange', function() {
+  if (window.location.hash !== '#admin') return;
+  try { history.replaceState(null, '', window.location.pathname + window.location.search); } catch (_) {}
+  const loginScreen = document.getElementById('loginScreen');
+  const adminPanel  = document.getElementById('adminPanel');
+  if (loginScreen && adminPanel) openAdminFlow();
+});
 
 async function doLogin() {
   const usuario = document.getElementById('loginUser').value;
@@ -1570,26 +1616,6 @@ if (_formCliente) {
 }
 
 
-// ─── Admin Deep Link ──────────────────────────────────────────────
-function shouldOpenAdminFromUrl() {
-  const params = new URLSearchParams(window.location.search);
-  return (
-    params.get('admin') === '1' ||
-    params.get('admin') === 'true' ||
-    window.location.hash === '#admin'
-  );
-}
+// ─── Inicialização ────────────────────────────────────────────────
+renderCatalogo();
 
-function initAdminDeepLink() {
-  if (!shouldOpenAdminFromUrl()) return;
-  const loginScreen = document.getElementById('loginScreen');
-  const adminPanel = document.getElementById('adminPanel');
-  if (!loginScreen || !adminPanel) {
-    console.warn('[admin] Elementos do admin ainda não foram encontrados.');
-    return;
-  }
-  openAdminFlow();
-}
-
-window.addEventListener('hashchange', initAdminDeepLink);
-initAdminDeepLink();

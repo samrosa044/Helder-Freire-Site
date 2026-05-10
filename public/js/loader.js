@@ -27,6 +27,21 @@ function carregarScript(src) {
 }
 
 (async () => {
+  // ─── Captura deep link ANTES de substituir o body ─────────────────
+  // O browser pode limpar o hash ao re-renderizar o DOM, então
+  // salvamos a intenção aqui para o main.js usar depois.
+  (function captureAdminDeepLink() {
+    const params = new URLSearchParams(window.location.search);
+    const isAdmin =
+      params.get('admin') === '1' ||
+      params.get('admin') === 'true' ||
+      window.location.hash === '#admin';
+    if (isAdmin) {
+      window.__adminDeepLink = true;
+      try { history.replaceState(null, '', window.location.pathname + window.location.search); } catch (_) {}
+    }
+  })();
+
   try {
     // Carrega todos os partials em paralelo
     const respostas = await Promise.all(
