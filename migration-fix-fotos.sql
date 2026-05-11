@@ -1,23 +1,21 @@
 -- ═══════════════════════════════════════════════════
---  Migração: corrigir URLs de fotos com placeholder inválido
+--  migration-fix-fotos.sql
+--  Corrige URLs de imagens salvas com o placeholder inválido
 --
---  Problema: imagens foram salvas com a URL de exemplo
+--  Problema: imagens foram gravadas no D1 com a URL:
 --    https://pub-SUBSTITUA_PELO_SEU_ID.r2.dev/imoveis/xxx.jpg
---  em vez da URL correta via proxy.
+--  que nunca foi uma URL real → OpaqueResponseBlocking no browser
 --
---  Esta migração converte essas URLs para o formato do proxy:
---    /r2/imoveis/xxx.jpg
+--  Solução: converte para o formato do proxy /r2/
+--    /r2/imoveis/xxx.jpg  (servido pelo Worker em functions/r2/[[path]].js)
 --
 --  Como executar:
---    wrangler d1 execute helder-freire-imoveis --file=migration-fix-fotos.sql
+--    wrangler d1 execute helder-freire-imoveis --remote --file=migration-fix-fotos.sql
 --
---  Ou no dashboard Cloudflare → D1 → helder-freire-imoveis → Console
+--  Para verificar antes de executar (só leitura):
+--    wrangler d1 execute helder-freire-imoveis --remote --command="SELECT id, titulo, fotos FROM imoveis WHERE fotos LIKE '%SUBSTITUA_PELO_SEU_ID%'"
 -- ═══════════════════════════════════════════════════
 
--- 1. Verifica quais registros têm a URL placeholder (consulta diagnóstico)
--- SELECT id, titulo, fotos FROM imoveis WHERE fotos LIKE '%SUBSTITUA_PELO_SEU_ID%';
-
--- 2. Corrige: substitui a base URL errada pelo prefixo do proxy
 UPDATE imoveis
 SET fotos = REPLACE(
   fotos,
@@ -25,6 +23,3 @@ SET fotos = REPLACE(
   '/r2'
 )
 WHERE fotos LIKE '%pub-SUBSTITUA_PELO_SEU_ID.r2.dev%';
-
--- 3. Confirma resultado
--- SELECT id, titulo, fotos FROM imoveis WHERE fotos LIKE '%/r2/%';

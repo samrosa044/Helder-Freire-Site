@@ -931,7 +931,9 @@ function abrirModalImovel(im) {
 
   // Processa fotos: aceita URLs separadas por vírgula/quebra de linha ou link único do Drive
   const rawFotos = im.fotos || '';
-  const fotosArr = rawFotos.split(/[\n,]+/).map(u => u.trim()).filter(u => u.startsWith('http') || u.startsWith('data:'));
+  const fotosArr = rawFotos.split(/[\n,]+/).map(u => u.trim()).filter(u =>
+    u.startsWith('http') || u.startsWith('/r2/') || u.startsWith('data:')
+  );
   let fotoIdx = 0;
 
   const galeriaHTML = fotosArr.length

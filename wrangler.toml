@@ -11,22 +11,20 @@ database_name = "helder-freire-imoveis"
 database_id = "aaf4b7fd-dc95-49a8-bd1e-1f2ffe29c9d8"
 
 # ─── R2 — Armazenamento de imagens ───────────────────────────────
-# Passos para configurar:
-#   1. Crie o bucket:  wrangler r2 bucket create helder-fotos
-#   2. Ative acesso público no dashboard Cloudflare → R2 → helder-fotos → Settings → Public Access
-#   3. Copie a URL pública (ex: https://pub-xxxx.r2.dev) e cole em R2_PUBLIC_URL abaixo
-#   4. Ou configure um domínio customizado para o bucket
+# Para criar o bucket (só precisa fazer uma vez):
+#   wrangler r2 bucket create helder-fotos
+#
+# NÃO é necessário ativar "Public Access" no bucket.
+# As imagens são servidas pelo proxy /r2/[path] no próprio Worker.
 [[r2_buckets]]
 binding = "FOTOS_BUCKET"
 bucket_name = "helder-fotos"
-# Para desenvolvimento local:
-# preview_bucket_name = "helder-fotos-preview"
 
 # ─── Variáveis de ambiente ───────────────────────────────────────
 # Estas são públicas. Segredos vão via: wrangler secret put NOME
 [vars]
 ADMIN_USER = "admin"
-# ADMIN_PASS  → definir com: wrangler secret put ADMIN_PASS
-# JWT_SECRET  → definir com: wrangler secret put JWT_SECRET
-# Nota: R2_PUBLIC_URL não é mais necessário.
-# As imagens são servidas pelo proxy /r2/[path] no próprio Worker.
+# R2_PUBLIC_URL removido — não é mais necessário.
+# As URLs das imagens são geradas automaticamente via proxy /r2/[path].
+# ADMIN_PASS → definir com: wrangler secret put ADMIN_PASS
+# JWT_SECRET → definir com: wrangler secret put JWT_SECRET
