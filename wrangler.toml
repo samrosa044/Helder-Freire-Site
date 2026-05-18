@@ -3,24 +3,28 @@ compatibility_date = "2024-09-23"
 pages_build_output_dir = "public"
 
 # ─── Banco de dados D1 ───────────────────────────────────────────
+# Após criar o banco com: wrangler d1 create helder-imoveis
+# Substitua o database_id pelo ID gerado
 [[d1_databases]]
 binding = "DB"
 database_name = "helder-freire-imoveis"
 database_id = "aaf4b7fd-dc95-49a8-bd1e-1f2ffe29c9d8"
 
 # ─── R2 — Armazenamento de imagens ───────────────────────────────
-# As imagens ficam no bucket PRIVADO e são servidas via /api/foto/*
-# Não é necessária URL pública do bucket.
-#
-# Para criar o bucket (apenas uma vez):
+# Para criar o bucket (só precisa fazer uma vez):
 #   wrangler r2 bucket create helder-fotos
-# Ou: Cloudflare Dashboard → R2 → Create bucket → nome: helder-fotos
+#
+# NÃO é necessário ativar "Public Access" no bucket.
+# As imagens são servidas pelo proxy /r2/[path] no próprio Worker.
 [[r2_buckets]]
 binding = "FOTOS_BUCKET"
 bucket_name = "helder-fotos"
 
 # ─── Variáveis de ambiente ───────────────────────────────────────
+# Estas são públicas. Segredos vão via: wrangler secret put NOME
 [vars]
 ADMIN_USER = "admin"
+# R2_PUBLIC_URL removido — não é mais necessário.
+# As URLs das imagens são geradas automaticamente via proxy /r2/[path].
 # ADMIN_PASS → definir com: wrangler secret put ADMIN_PASS
 # JWT_SECRET → definir com: wrangler secret put JWT_SECRET

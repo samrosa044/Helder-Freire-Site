@@ -14,7 +14,7 @@
 
 <!-- ══ NAV PRINCIPAL ══ -->
 <nav id="navbar">
-  <a href="/" class="nav-logo">
+  <a href="#inicio" class="nav-logo">
     <div class="nav-check">
       <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7.5L5.5 10.5L11 4" stroke="#c9a84c" stroke-width="1.8" stroke-linecap="round"/></svg>
     </div>
@@ -25,10 +25,10 @@
   </a>
 
   <ul class="nav-links" id="navLinks">
-    <li><a href="/" onclick="fechaMenu()">Início</a></li>
-    <li><a href="/imoveis" onclick="fechaMenu()">Imóveis</a></li>
-    <li><a href="/sobre" onclick="fechaMenu()">Sobre</a></li>
-    <li><a href="/anuncie-seu-imovel" onclick="fechaMenu()">Anuncie seu imóvel</a></li>
+    <li><a href="#inicio" onclick="fechaMenu()">Início</a></li>
+    <li><a href="#catalogo" onclick="fechaMenu()">Imóveis</a></li>
+    <li><a href="#sobre" onclick="fechaMenu()">Sobre</a></li>
+    <li><a href="#anuncie" onclick="fechaMenu()">Anuncie seu imóvel</a></li>
     <li><a href="#contato" onclick="fechaMenu()">Contato</a></li>
     <li class="nav-wa-mobile">
       <a href="https://wa.me/5535999999999" target="_blank" class="site-wa-link nav-wa-btn-mobile">
@@ -44,49 +44,10 @@
       Falar no WhatsApp
     </a>
     <button class="nav-hamburger" id="navHamburger" onclick="toggleMenu()" aria-label="Abrir menu">
-      <span></span><span></span><span></span>
+      <span></span>
+      <span></span>
+      <span></span>
     </button>
   </div>
 </nav>
-
-<script>
-function toggleMenu() {
-  const links = document.getElementById('navLinks');
-  const ham = document.getElementById('navHamburger');
-  links.classList.toggle('open');
-  ham.classList.toggle('open');
-}
-function fechaMenu() {
-  const links = document.getElementById('navLinks');
-  const ham = document.getElementById('navHamburger');
-  if (links) links.classList.remove('open');
-  if (ham) ham.classList.remove('open');
-}
-document.addEventListener('click', function(e) {
-  const nav = document.getElementById('navbar');
-  const links = document.getElementById('navLinks');
-  if (nav && !nav.contains(e.target) && links && links.classList.contains('open')) {
-    fechaMenu();
-  }
-});
-window.addEventListener('scroll', function() {
-  const nav = document.getElementById('navbar');
-  if (!nav) return;
-  nav.classList.toggle('scrolled', window.scrollY > 60);
-});
-// atualiza WA links com config do servidor
-function _aplicarWALinks() {
-  fetch('/api/config').then(r=>r.ok?r.json():null).then(cfg=>{
-    if (!cfg || !cfg.whatsapp) return;
-    document.querySelectorAll('.site-wa-link').forEach(el=>{
-      const href = el.getAttribute('href') || '';
-      if (href.includes('wa.me')) {
-        const u = new URL(href);
-        const msg = u.searchParams.get('text') || '';
-        el.href = cfg.whatsapp + (msg ? '?text=' + encodeURIComponent(msg) : '');
-      }
-    });
-  }).catch(()=>{});
-}
-document.addEventListener('DOMContentLoaded', _aplicarWALinks);
-</script>
+<!-- Funções toggleMenu/fechaMenu definidas em main.js (scripts em innerHTML não executam) -->

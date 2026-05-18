@@ -34,6 +34,13 @@ function _tsInit() {
   if (document.querySelector('#ts-cliente'))
     _tsW.cliente = window.turnstile.render('#ts-cliente', {sitekey:TS_SITEKEY, callback:onTsCliente, execution:'execute', theme:'dark'});
 }
+// Se o Turnstile disparou o onload= antes do main.js estar pronto,
+// o stub no index.html salvou window.__tsPending = true.
+// Agora que main.js carregou e o DOM está montado, re-executamos.
+if (window.__tsPending) {
+  window.__tsPending = false;
+  _tsInit();
+}
 function _tsExecute(key, btnId, clearFn) {
   clearFn();
   const btn = document.getElementById(btnId);
@@ -325,44 +332,33 @@ async function submitCadastro() {
 
 // ─── Admin Login ─────────────────────────────────────────────────
 function openAdminFlow() {
-  const loginScreen = document.getElementById('loginScreen');
-  const adminPanel = document.getElementById('adminPanel');
-
-  if (API.token()) { openAdminPanel(); return; }
-
-  if (!loginScreen) {
-    console.error('[admin] Não encontrei #loginScreen. O partial login.html não foi carregado.');
+  if (API.token()) {
+    // Já autenticado — abre o painel direto
+    console.log('[admin] Token encontrado, abrindo painel...');
+    openAdminPanel();
     return;
   }
-
-  loginScreen.classList.add('open');
-  document.body.style.overflow = 'hidden';
+  // Sem token — exige login
+  console.log('[admin] Sem token, exibindo tela de login...');
+  const loginScreen = document.getElementById('loginScreen');
+  if (loginScreen) {
+    loginScreen.classList.add('open');
+    document.body.style.overflow = 'hidden';
+    // Foca no campo de usuário para UX imediata
+    setTimeout(() => {
+      const userInput = document.getElementById('loginUser');
+      if (userInput) userInput.focus();
+    }, 150);
+  }
 }
 
-function shouldOpenAdminFromUrl() {
-  const params = new URLSearchParams(window.location.search);
-  const adminParam = (params.get('admin') || '').toLowerCase();
-  const hash = (window.location.hash || '').toLowerCase();
-  const path = (window.location.pathname || '').toLowerCase().replace(/\/$/, '');
+// Listener para /#admin digitado após a página já estar carregada
+window.addEventListener('hashchange', function () {
+  if (window.location.hash !== '#admin') return;
+  history.replaceState(null, '', window.location.pathname);
+  openAdminFlow(); // exige login se não houver token
+});
 
-  return (
-    adminParam === '1' ||
-    adminParam === 'true' ||
-    adminParam === 'sim' ||
-    hash === '#admin' ||
-    path === '/admin'
-  );
-}
-
-function initAdminDeepLink() {
-  if (!shouldOpenAdminFromUrl()) return;
-
-  // Espera 1 frame para garantir que os partials já entraram no DOM.
-  requestAnimationFrame(() => {
-    console.log('[admin] Abrindo painel pela URL...');
-    openAdminFlow();
-  });
-}
 
 async function doLogin() {
   const usuario = document.getElementById('loginUser').value;
@@ -387,27 +383,19 @@ async function doLogin() {
 }
 
 function closeLoginAndAdmin() {
-  const loginScreen = document.getElementById('loginScreen');
-  if (loginScreen) loginScreen.classList.remove('open');
+  document.getElementById('loginScreen').classList.remove('open');
   document.body.style.overflow = '';
 }
 
 // ─── Admin Panel ─────────────────────────────────────────────────
 async function openAdminPanel() {
-  const adminPanel = document.getElementById('adminPanel');
-  if (!adminPanel) {
-    console.error('[admin] Não encontrei #adminPanel. O partial admin-panel.html não foi carregado.');
-    return;
-  }
-
-  adminPanel.classList.add('open');
+  document.getElementById('adminPanel').classList.add('open');
   document.body.style.overflow = 'hidden';
   await Promise.all([updateKPIs(), renderPendentes(), renderImoveis(), renderAudit()]);
 }
 
 function closeAdmin() {
-  const adminPanel = document.getElementById('adminPanel');
-  if (adminPanel) adminPanel.classList.remove('open');
+  document.getElementById('adminPanel').classList.remove('open');
   document.body.style.overflow = '';
   renderCatalogo();
 }
@@ -943,7 +931,9 @@ function abrirModalImovel(im) {
 
   // Processa fotos: aceita URLs separadas por vírgula/quebra de linha ou link único do Drive
   const rawFotos = im.fotos || '';
-  const fotosArr = rawFotos.split(/[\n,]+/).map(u => u.trim()).filter(u => u.startsWith('http') || u.startsWith('data:'));
+  const fotosArr = rawFotos.split(/[\n,]+/).map(u => u.trim()).filter(u =>
+    u.startsWith('http') || u.startsWith('/r2/') || u.startsWith('data:')
+  );
   let fotoIdx = 0;
 
   const galeriaHTML = fotosArr.length
@@ -1587,6 +1577,32 @@ function closeDetModal() {
   if (m) m.style.display='none';
 }
 
+// ─── Funções do Menu de Navegação ─────────────────────────────────
+// (Definidas aqui porque scripts dentro de innerHTML não são executados
+//  pelo browser — os partials são injetados via loader.js com innerHTML)
+function toggleMenu() {
+  const links = document.getElementById('navLinks');
+  const ham   = document.getElementById('navHamburger');
+  if (links) links.classList.toggle('open');
+  if (ham)   ham.classList.toggle('open');
+}
+
+function fechaMenu() {
+  const links = document.getElementById('navLinks');
+  const ham   = document.getElementById('navHamburger');
+  if (links) links.classList.remove('open');
+  if (ham)   ham.classList.remove('open');
+}
+
+// Fecha menu ao clicar fora
+document.addEventListener('click', function (e) {
+  const nav   = document.getElementById('navbar');
+  const links = document.getElementById('navLinks');
+  if (nav && !nav.contains(e.target) && links && links.classList.contains('open')) {
+    fechaMenu();
+  }
+});
+
 // ─── Event Listeners ──────────────────────────────────────────────
 window.addEventListener('scroll', () => {
   const navbar = document.getElementById('navbar');
@@ -1597,9 +1613,9 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Escape') { closeRejectModal(); }
 });
 
-const rejectModalEl = document.getElementById('rejectModal');
-if (rejectModalEl) {
-  rejectModalEl.addEventListener('click', e => {
+const rejectModal = document.getElementById('rejectModal');
+if (rejectModal) {
+  rejectModal.addEventListener('click', e => {
     if (e.target.id === 'rejectModal') closeRejectModal();
   });
 }
@@ -1611,7 +1627,7 @@ if (_formCliente) {
   });
 }
 
+
 // ─── Inicialização ────────────────────────────────────────────────
 renderCatalogo();
-initAdminDeepLink();
-window.addEventListener('hashchange', initAdminDeepLink);
+
