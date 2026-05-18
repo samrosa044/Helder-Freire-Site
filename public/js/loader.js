@@ -27,15 +27,6 @@ function carregarScript(src) {
 }
 
 (async () => {
-  // ── Captura ANTES de qualquer await ou troca de DOM ──────────────
-  // O hash (#admin) e query (?admin=1) são lidos aqui, quando ainda estão
-  // garantidamente na URL, antes de qualquer re-renderização do body.
-  const _adminRequested = (
-    new URLSearchParams(window.location.search).get('admin') === '1' ||
-    new URLSearchParams(window.location.search).get('admin') === 'true' ||
-    window.location.hash === '#admin'
-  );
-
   try {
     // Carrega todos os partials em paralelo
     const respostas = await Promise.all(
@@ -56,17 +47,11 @@ function carregarScript(src) {
     document.body.innerHTML = htmls.join('\n');
 
     // Carrega upload-fotos.js ANTES de main.js
+    // (main.js chama _fotosObterUrls, _fotosLimpar, etc. definidas em upload-fotos.js)
     await carregarScript('/js/upload-fotos.js');
 
     // Carrega o script principal APÓS o DOM estar montado
     await carregarScript('/js/main.js');
-
-    // ── Admin deep link ───────────────────────────────────────────
-    // Neste ponto: DOM completo, upload-fotos.js e main.js carregados.
-    // É seguro chamar openAdminFlow() diretamente.
-    if (_adminRequested && typeof openAdminFlow === 'function') {
-      openAdminFlow();
-    }
 
   } catch (err) {
     console.error('[loader] Erro ao montar a página:', err);
